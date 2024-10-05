@@ -26,7 +26,7 @@ function add_micro() {
             dispatch_error("Could not create the micros folder for storing your new micro");
             return;
         }
-    $upload_directory_file = $upload_directory . '/' . basename($_FILES['micro-deploy-add-new-micro-file']['name']);
+    $upload_directory_file = $upload_directory . DIRECTORY_SEPARATOR . basename($_FILES['micro-deploy-add-new-micro-file']['name']);
     if(move_uploaded_file($temp_file, $upload_directory_file)) {
         $zip = new ZipArchive;
         if($zip->open($upload_directory_file)){
@@ -36,7 +36,7 @@ function add_micro() {
             dispatch_success('Micro uploaded to server successfully');
 
 //            Add the rewrite rules
-            link_micro($upload_directory_file);
+            link_micro($upload_directory_file, $micro_name);
         }
         else{
             dispatch_error('Could not extract the zip file');
@@ -50,9 +50,33 @@ function add_micro() {
     }
 }
 
+function link_micro($upload_directory_file, $micro_name) {
+    global $wpdb;
 
-function link_micro($upload_directory_file) {
-    echo $upload_directory_file;
+    $micro_table_name = $wpdb->prefix . 'microdeploy_micros';
+
+    $data = array(
+        'slug' => sanitize_text_field($micro_name),
+        'path' => sanitize_text_field($upload_directory_file),
+    );
+
+    if(!$wpdb->insert($micro_table_name, $data)){
+        error_log("COULD NOT INSERT DATA INTO MICRIOS TABLE");
+        dispatch_error('Could not insert data into the table');
+        return;
+    }
+    add_rewrite_rule(
+        '^' . $micro_name . '/?$',
+        'index.php?micro=landing-page',
+        'top'
+    );
+//    for static files
+    add_rewrite_rule(
+        '^' . $micro_name . '/(.+)',
+        'index.php?micro=' . $micro_name . '&static_file=$matches[1]',
+        'top'
+    );
+    flush_rewrite_rules();
 }
 
 
