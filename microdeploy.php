@@ -49,7 +49,7 @@ add_action('init', function () {
     foreach ($results as $micro_name){
         add_rewrite_rule(
             '^' . $micro_name->slug . '/?$',
-            'index.php?micro=landing-page',
+            'index.php?micro=' . $micro_name->slug,
             'top'
         );
 //    for static files

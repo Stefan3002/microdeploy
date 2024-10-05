@@ -36,7 +36,7 @@ function add_micro() {
             dispatch_success('Micro uploaded to server successfully');
 
 //            Add the rewrite rules
-            link_micro($upload_directory_file, $micro_name);
+            link_micro($upload_directory, $micro_name);
         }
         else{
             dispatch_error('Could not extract the zip file');
