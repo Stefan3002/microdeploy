@@ -5,7 +5,7 @@ Description: Deploys micro frontends to Wordpress
 Version: 1.0
 Author: Ștefan Secrieru
 */
-
+ob_start();
 require_once(plugin_dir_path(__FILE__) . 'scripts/admin-dashboard.php');
 require_once(plugin_dir_path(__FILE__) . 'scripts/micro.php');
 
@@ -46,6 +46,8 @@ add_action('init', function () {
     $micro_table_name = $wpdb->prefix . 'microdeploy_micros';
     $results = $wpdb->get_results("SELECT slug FROM $micro_table_name");
 
+
+
     foreach ($results as $micro_name){
         add_rewrite_rule(
             '^' . $micro_name->slug . '/?$',
@@ -74,45 +76,65 @@ add_filter('query_vars', function ($query_vars) {
 
 
 add_action('template_redirect', function () {
+    ob_start();
     $micro_target = get_query_var('micro', -1);
     $micro_static_file = get_query_var('static_file', -1);
 
+    error_log("MICRONAMESLUG " . $micro_target);
+
 //    echo $micro_target . "   " . $micro_static_file . "    sad------";
 
-    if(array_key_exists('extension', pathinfo($micro_static_file)))
-    $extension = pathinfo($micro_static_file)['extension'] ;
-    $static_file_path = plugin_dir_path(__FILE__) . 'micros' . DIRECTORY_SEPARATOR . $micro_target . DIRECTORY_SEPARATOR . 'build' . DIRECTORY_SEPARATOR . $micro_static_file;
+// =========================
+//    Verify the integrity of the custom query parameters
+    if($micro_target === -1)
+        return;
+// =========================
+    if($micro_static_file !== -1) {
+        if (array_key_exists('extension', pathinfo($micro_static_file)))
+            $extension = pathinfo($micro_static_file)['extension'];
+        $static_file_path = get_build_folder(plugin_dir_path(__FILE__) . 'micros' . DIRECTORY_SEPARATOR . $micro_target . DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . $micro_static_file;
 
-    if(!is_file($static_file_path)) {
-        http_response_code(404);
-//        exit();
-    }
+        error_log("aaaaaaaaaa--- " . is_file($static_file_path) . " ----");
+        if (!file_exists($static_file_path)) {
+            error_log("aaaaaaaaaa--- " . 'false' . " ----");
 
-    error_log($static_file_path);
+            header("HTTP/1.1 404 Not Found");
+            header("Content-Type: text/plain");
+            exit();
+        }
 
-    if($micro_static_file !== -1){
-        if($extension === 'css')
+        if ($extension === 'css')
             header('Content-Type: text/css');
         elseif ($extension === 'js')
             header('Content-Type: application/javascript');
-        elseif ($extension === 'jpg' || $extension === 'jpeg')
+        elseif ($extension === 'jpg' || $extension === 'jpeg') {
             header('Content-Type: image/jpeg');
-        elseif ($extension === 'png')
+            header('Content-Length: ' . filesize($static_file_path));
+        }
+        elseif ($extension === 'png') {
             header('Content-Type: image/png');
+            header('Content-Length: ' . filesize($static_file_path));
+        }
         elseif ($extension === 'webp') {
             header('Content-Type: image/webp');
+            header('Content-Length: ' . filesize($static_file_path));
+        }
+        elseif ($extension === 'svg') {
+            header('Content-Type: image/svg+xml');
+            header('Content-Length: ' . filesize($static_file_path));
+        }
+        elseif ($extension === 'glb') {
+            header('Content-Type: model/gltf-binary');
+            header('Content-Length: ' . filesize($static_file_path));
         }
         readfile($static_file_path);
         exit();
     }
 
-    if($micro_target === -1)
-        return;
-//    echo 'ter   ' . $micro_target . '    dsf';
-    $upload_directory_file = plugin_dir_path(__FILE__) . 'micros/' . $micro_target . '/build/index.html';
+
+    $upload_directory_file = get_build_folder(plugin_dir_path(__FILE__) . 'micros' . DIRECTORY_SEPARATOR . $micro_target . DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'index.html';
 
     include $upload_directory_file;
-//    include plugin_dir_path(__FILE__) . 'micros/test123/style.css';
 
     exit();
 });
@@ -131,6 +153,7 @@ function micro_deploy_initialize_db() {
     $query = "
       CREATE TABLE " . $table_name . "(
           id mediumint(9) NOT NULL AUTO_INCREMENT,
+          name varchar(255) NOT NULL,
           slug varchar(255) NOT NULL,
           path varchar(255) NOT NULL,
           created_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -144,7 +167,3 @@ function micro_deploy_initialize_db() {
     error_log('logs ' . print_r($logs, true));
 }
 micro_deploy_initialize_db();
-
-?>
-
-

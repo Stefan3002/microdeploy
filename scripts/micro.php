@@ -4,12 +4,29 @@ require_once plugin_dir_path(__FILE__) . 'utils.php';
 function add_micro() {
 
     $micro_name = $_POST['micro-deploy-add-new-micro-name'];
+    $micro_slug = $_POST['micro-deploy-add-new-micro-slug'];
 
+// =========================
+//  Remove the first slash if existent
+    if($micro_slug[0] === '/')
+        $micro_slug = trim($micro_slug, "\n/\t ");
+// =========================
+// =========================
+//    Check for WP pages conflicts!
+//    I.E: Are there any existing pages with the same slug / name?
+    $wp_pages = get_pages();
+    foreach ($wp_pages as $wp_page)
+        if($wp_page->post_name === $micro_slug) {
+            dispatch_error("Existing page or post with the same name!");
+            error_log("Existing page or post with the same name!");
+            return;
+        }
+// =========================
     if(!array_key_exists('micro-deploy-add-new-micro-file', $_FILES)){
         dispatch_error('No files uploaded');
         return;
     }
-    $upload_directory = ABSPATH . 'wp-content\plugins\microdeploy\micros\\' . $micro_name;
+    $upload_directory = ABSPATH . 'wp-content\plugins\microdeploy\micros\\' . $micro_slug;
 
     $temp_file = $_FILES['micro-deploy-add-new-micro-file']['tmp_name'];
     if(!$temp_file){
@@ -36,7 +53,7 @@ function add_micro() {
             dispatch_success('Micro uploaded to server successfully');
 
 //            Add the rewrite rules
-            link_micro($upload_directory, $micro_name);
+            link_micro($upload_directory, $micro_slug, $micro_name);
         }
         else{
             dispatch_error('Could not extract the zip file');
@@ -50,13 +67,14 @@ function add_micro() {
     }
 }
 
-function link_micro($upload_directory_file, $micro_name) {
+function link_micro($upload_directory_file, $micro_slug, $micro_name) {
     global $wpdb;
 
     $micro_table_name = $wpdb->prefix . 'microdeploy_micros';
 
     $data = array(
-        'slug' => sanitize_text_field($micro_name),
+        'name' => sanitize_text_field($micro_name),
+        'slug' => sanitize_text_field($micro_slug),
         'path' => sanitize_text_field($upload_directory_file),
     );
 
@@ -66,14 +84,14 @@ function link_micro($upload_directory_file, $micro_name) {
         return;
     }
     add_rewrite_rule(
-        '^' . $micro_name . '/?$',
+        '^' . $micro_slug . '/?$',
         'index.php?micro=landing-page',
         'top'
     );
 //    for static files
     add_rewrite_rule(
-        '^' . $micro_name . '/(.+)',
-        'index.php?micro=' . $micro_name . '&static_file=$matches[1]',
+        '^' . $micro_slug . '/(.+)',
+        'index.php?micro=' . $micro_slug . '&static_file=$matches[1]',
         'top'
     );
     flush_rewrite_rules();
