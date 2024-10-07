@@ -49,11 +49,12 @@
 .micro_deploy_admin-page-wrapper .micro-deploy-created-micros {
   text-align: center;
 }
-.micro_deploy_admin-page-wrapper .micro-deploy-micros {
+.micro_deploy_admin-page-wrapper .micro-deploy-created-micros .micro-deploy-micros {
   display: flex;
   gap: 1rem;
   justify-content: center;
   align-items: center;
+  flex-wrap: wrap;
 }
 
 /*# sourceMappingURL=admin-style.css.map */

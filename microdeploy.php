@@ -94,9 +94,9 @@ add_action('template_redirect', function () {
             $extension = pathinfo($micro_static_file)['extension'];
         $static_file_path = get_build_folder(plugin_dir_path(__FILE__) . 'micros' . DIRECTORY_SEPARATOR . $micro_target . DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . $micro_static_file;
 
-        error_log("aaaaaaaaaa--- " . is_file($static_file_path) . " ----");
+//        error_log("aaaaaaaaaa--- " . is_file($static_file_path) . " ----");
         if (!file_exists($static_file_path)) {
-            error_log("aaaaaaaaaa--- " . 'false' . " ----");
+//            error_log("aaaaaaaaaa--- " . 'false' . " ----");
 
             header("HTTP/1.1 404 Not Found");
             header("Content-Type: text/plain");

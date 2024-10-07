@@ -50,10 +50,11 @@ function add_micro() {
             $zip->extractTo($upload_directory);
             $zip->close();
             unlink($upload_directory_file);
-            dispatch_success('Micro uploaded to server successfully');
-
 //            Add the rewrite rules
             link_micro($upload_directory, $micro_slug, $micro_name);
+//            Change the URLS for static serving!
+            micro_deploy_adjust_urls_static_serve($upload_directory, $micro_slug);
+            dispatch_success('Micro uploaded to server successfully');
         }
         else{
             dispatch_error('Could not extract the zip file');
@@ -97,5 +98,34 @@ function link_micro($upload_directory_file, $micro_slug, $micro_name) {
     flush_rewrite_rules();
 }
 
+function micro_deploy_get_slug_url($relative_path, $micro_slug){
+    return '/' . $micro_slug . $relative_path;
+}
 
+function micro_deploy_adjust_urls_static_serve($micro_upload_directory, $micro_slug) {
+    error_log($micro_upload_directory . ' ' . $micro_slug);
 
+    $files = glob($micro_upload_directory . DIRECTORY_SEPARATOR . '*');
+    foreach($files as $file) {
+        if(is_dir($file))
+            micro_deploy_adjust_urls_static_serve($file, $micro_slug);
+        elseif (is_file($file)){
+            $extension = pathinfo($file)['extension'];
+            //                Verify if there are urls in CSS file
+            if($extension === 'css'){
+                $contents = file_get_contents($file);
+                $pattern = '/url\(\s*[\'"]?([^\'"\s]+)[\'"]?\s*\)/';
+                $updated_contents = preg_replace_callback($pattern, function($matches) use ($micro_slug) {
+
+                    $match = trim($matches[1], ".");
+
+                    $new_url = micro_deploy_get_slug_url($match, $micro_slug);
+                    return 'url(\'' . $new_url . '\')';
+
+                }, $contents);
+                file_put_contents($file, $updated_contents);
+            }
+        }
+    }
+
+}

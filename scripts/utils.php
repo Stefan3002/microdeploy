@@ -12,7 +12,6 @@ function micro_deploy_remove_folder($target_dir){
     if(!is_dir($target_dir))
         throw new Exception($target_dir . "is not a directory!");
 
-
     $files = glob($target_dir . DIRECTORY_SEPARATOR . "*");
 
     foreach($files as $file)
@@ -46,5 +45,3 @@ function get_build_folder($path) {
         throw new Exception("Could not determine build path");
     }
 }
-
-?>

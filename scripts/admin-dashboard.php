@@ -115,5 +115,3 @@ function micro_deploy_generate_admin_page() {
     }
 
 }
-
-?>
