@@ -164,6 +164,6 @@ function micro_deploy_initialize_db() {
     require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
 
     $logs = dbDelta($query);
-//    error_log('logs ' . print_r($logs, true));
+    error_log('logs ' . print_r($logs, true));
 }
 micro_deploy_initialize_db();
