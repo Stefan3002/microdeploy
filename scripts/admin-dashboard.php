@@ -36,6 +36,9 @@ function micro_deploy_generate_admin_page() {
         </div>
         <div class="micro-deploy-created-micros">
             <h2>Manage micros</h2>
+            <div class="micro-deploy-manage-options">
+
+            </div>
             <div class="micro-deploy-micros">
                 <?php
                 foreach ($results as $micro) {
@@ -45,11 +48,18 @@ function micro_deploy_generate_admin_page() {
                         <p>Slug: <span class="micro_deploy_admin_micro_detail">/<?php _e($micro->slug) ?></span></p>
                         <p><?php _e($micro->created_at) ?></p>
                         <p><a href="/<?php _e($micro->slug) ?>">View micro</a></p>
-                        <form action="" method="POST">
-                            <input type="text" hidden name="delete-micro" value="<?php _e($micro->id) ?>">
-                            <input type="text" hidden name="delete-micro-path" value="<?php _e($micro->path) ?>">
-                            <button type="submit">DELETE</button>
-                        </form>
+                        <div class="micro-deploy-option-forms">
+                            <form class="micro_deploy_admin_form" action="" method="POST">
+                                <input type="text" hidden name="delete-micro" value="<?php _e($micro->id) ?>">
+                                <input type="text" hidden name="delete-micro-path" value="<?php _e($micro->path) ?>">
+                                <button class="micro-deploy-delete-button" type="submit">DELETE</button>
+                            </form>
+                            <form class="micro_deploy_admin_form" action="" method="POST">
+                                <input type="text" hidden name="micro-deploy-fix-links" value="<?php _e($micro->path) ?>">
+                                <input type="text" hidden name="micro-deploy-fix-links-slug" value="<?php _e($micro->slug) ?>">
+                                <button type="submit">PARSE LINKS</button>
+                            </form>
+                        </div>
                     </div>
                     <?php
                 }
@@ -73,7 +83,7 @@ function micro_deploy_generate_admin_page() {
             } else {
 //            Delete the OS folder
                 try {
-                    error_log('asdawdwad ' . $_POST['delete-micro-path']);
+//                    error_log('asdawdwad ' . $_POST['delete-micro-path']);
                     micro_deploy_remove_folder($_POST['delete-micro-path']);
                     rmdir($_POST['delete-micro-path']);
                 }
@@ -91,6 +101,8 @@ function micro_deploy_generate_admin_page() {
         $wpdb->query('ROLLBACK');
     }
 
+    if(isset($_POST['micro-deploy-fix-links']))
+        micro_deploy_adjust_urls_static_serve($_POST['micro-deploy-fix-links'], $_POST['micro-deploy-fix-links-slug']);
 
     if(isset($_FILES['micro-deploy-add-new-micro-file'])) {
         $micro_name = $_POST['micro-deploy-add-new-micro-name'];
