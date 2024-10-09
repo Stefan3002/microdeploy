@@ -136,7 +136,7 @@ function micro_deploy_adjust_urls_static_serve($micro_upload_directory, $micro_s
             }
             elseif($extension === 'html' || $extension === 'htm'){
                 $contents = file_get_contents($file);
-                $pattern = '/src=\s*[\'"]?(?:[.]{0,2}\/?)([^\/\'"\s]+)\/?([^\'"\s]*)[\'"]?\s*/';
+                $pattern = '/src=\s*[\'"]?(?:[.]{0,2}(?!http)\/?)([^\/\'"\s]+)\/?([^\'"\s]*)[\'"]?\s*/';
                 $pattern2 = '/href=\s*[\'"]?(?:[.]{0,2}(?!http)\/?)([^\/\'"\s]+)\/?([^\'"\s]*)[\'"]?\s*/';
 
                 $updated_contents = preg_replace_callback($pattern, function($matches) use ($micro_slug) {

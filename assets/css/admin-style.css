@@ -1,3 +1,6 @@
+.micro_deploy_admin-page-wrapper input {
+  padding: 0.5rem;
+}
 .micro_deploy_admin-page-wrapper button {
   background: wheat;
   border-radius: 10px;

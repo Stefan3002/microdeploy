@@ -45,3 +45,26 @@ function get_build_folder($path) {
         throw new Exception("Could not determine build path");
     }
 }
+
+function micro_deploy_log_intrusion($message) {
+//    Check if the custom log file exists
+    if(!is_dir(plugin_dir_path(__FILE__) . 'logs'))
+        if(!mkdir(plugin_dir_path(__FILE__) . 'logs')){
+            error_log("Could not create logs directory");
+            return;
+        }
+    $error_log_file = plugin_dir_path(__FILE__) . 'logs' . DIRECTORY_SEPARATOR . 'intrusions.log';
+
+    $fd = fopen($error_log_file, "a");
+    if(!$fd){
+        error_log("Could not open intrusions log file");
+        return;
+    }
+
+    fwrite($fd, date('Y-m-d H:i:s = '));
+    fwrite($fd, $message);
+    fwrite($fd, "\n");
+
+    error_log($message);
+    fclose($fd);
+}

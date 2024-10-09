@@ -73,14 +73,15 @@ add_filter('query_vars', function ($query_vars) {
 });
 
 
+$micro_deploy_allowed_files = ['css', 'js', 'png', 'jpg', 'jpeg', 'html', 'htm', 'svg'];
 
 
 add_action('template_redirect', function () {
+    global $micro_deploy_allowed_files;
     ob_start();
     $micro_target = get_query_var('micro', -1);
     $micro_static_file = get_query_var('static_file', -1);
 
-    error_log("MICRONAMESLUG " . $micro_target);
 
 //    echo $micro_target . "   " . $micro_static_file . "    sad------";
 
@@ -92,12 +93,30 @@ add_action('template_redirect', function () {
     if($micro_static_file !== -1) {
         if (array_key_exists('extension', pathinfo($micro_static_file)))
             $extension = pathinfo($micro_static_file)['extension'];
-        $static_file_path = get_build_folder(plugin_dir_path(__FILE__) . 'micros' . DIRECTORY_SEPARATOR . $micro_target . DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . $micro_static_file;
+//        ONLY ALLOW CERTAIN TYPES OF FILES
+        if(!in_array($extension, $micro_deploy_allowed_files)){
+            micro_deploy_log_intrusion("Forbidden file type attempt to access: " . $extension);
+            header("HTTP/1.1 403 Forbidden");
+            header("Content-Type: text/plain");
+            exit("Forbidden: You do not have permission to access this resource type.");
+        }
 
-//        error_log("aaaaaaaaaa--- " . is_file($static_file_path) . " ----");
+        $base_allowed_path = realpath(get_build_folder(plugin_dir_path(__FILE__) . 'micros' . DIRECTORY_SEPARATOR . $micro_target . DIRECTORY_SEPARATOR));
+        $static_file_path = $base_allowed_path . DIRECTORY_SEPARATOR . $micro_static_file;
+
+        //MITIGATE DIRECTORY ATTACKS
+//        Never return anything that is not in the micro folder already
+        $static_file_path = realpath($static_file_path);
+
+        if(strpos($static_file_path, $base_allowed_path) !== 0){
+            micro_deploy_log_intrusion("Forbidden file attempt to access: " . $static_file_path . "\n");
+            header("HTTP/1.1 403 Forbidden");
+            header("Content-Type: text/plain");
+            exit("Forbidden: You do not have permission to access this resource.");
+        }
+
+
         if (!file_exists($static_file_path)) {
-//            error_log("aaaaaaaaaa--- " . 'false' . " ----");
-
             header("HTTP/1.1 404 Not Found");
             header("Content-Type: text/plain");
             exit();
