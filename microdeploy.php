@@ -5,7 +5,6 @@ Description: Deploys micro frontends to Wordpress
 Version: 1.0
 Author: Ștefan Secrieru
 */
-ob_start();
 require_once(plugin_dir_path(__FILE__) . 'scripts/admin-dashboard.php');
 require_once(plugin_dir_path(__FILE__) . 'scripts/micro.php');
 
@@ -24,22 +23,6 @@ function micro_deploy_enqueue_admin_styles() {
 
     wp_enqueue_script('react', plugins_url('micros/test123/build/static/js/main.15dc85d0.js', __FILE__));
 }
-
-//add_action('init', function () {
-//    add_rewrite_rule(
-//        '^landing-page/?$',
-//        'index.php?micro=landing-page',
-//        'top'
-//    );
-////    for static files
-//    add_rewrite_rule(
-//        '^landing-page/(.+)',
-//        'index.php?micro=landing-page&static_file=$matches[1]',
-//        'top'
-//    );
-//    flush_rewrite_rules();
-//});
-
 
 add_action('init', function () {
     global $wpdb;

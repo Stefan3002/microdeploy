@@ -3,6 +3,8 @@
 require_once(plugin_dir_path(__FILE__) . 'modals.php');
 require_once(plugin_dir_path(__FILE__) . 'utils.php');
 
+require_once(plugin_dir_path(__FILE__) . 'state-manager.php');
+
 // Function to display the certificate generation page
 function micro_deploy_generate_admin_page() {
 
@@ -24,6 +26,7 @@ function micro_deploy_generate_admin_page() {
         <div class="micro-deploy-admin-page-content">
             <div class="micro-deploy-admin-page-new-micro">
                 <h2>Add a new micro frontend.</h2>
+                <p>───── ⋆⋅☆⋅⋆ ─────</p>
                 <p>Note: Only upload the build folder of your micro frontend.</p>
                 <form action="" method="post" enctype="multipart/form-data">
                     <input type="file" accept=".zip" required name="micro-deploy-add-new-micro-file">
@@ -31,11 +34,19 @@ function micro_deploy_generate_admin_page() {
                     <input type="text" required placeholder="Slug of micro" name="micro-deploy-add-new-micro-slug">
                     <button type="submit">Add micro</button>
                 </form>
-
             </div>
+        </div>
+        <div class="micro-deploy-state">
+            <h2>State Manager Service</h2>
+            <p>───── ⋆⋅☆⋅⋆ ─────</p>
+            <form action="" method="post">
+                <input type="text" hidden name="initialize_state">
+                <button type="submit">Initialize state manager</button>
+            </form>
         </div>
         <div class="micro-deploy-created-micros">
             <h2>Manage micros</h2>
+            <p>───── ⋆⋅☆⋅⋆ ─────</p>
             <div class="micro-deploy-manage-options">
 
             </div>
@@ -101,6 +112,9 @@ function micro_deploy_generate_admin_page() {
         $wpdb->query('ROLLBACK');
     }
 
+    if(isset($_POST['initialize_state']))
+        micro_deploy_initialize_state_manager();
+
     if(isset($_POST['micro-deploy-fix-links']))
         micro_deploy_adjust_urls_static_serve($_POST['micro-deploy-fix-links'], $_POST['micro-deploy-fix-links-slug']);
 
@@ -127,3 +141,4 @@ function micro_deploy_generate_admin_page() {
     }
 
 }
+

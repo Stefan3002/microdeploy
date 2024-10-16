@@ -8,8 +8,18 @@
   padding: 1rem
 .micro-deploy-modal-error
   background: crimson
+  color: whitesmoke
+  animation: slide-left .35s
+  border: 2px solid whitesmoke
 
 .micro-deploy-modal-success
   background: lightgreen
   left: 200px
   right: unset
+
+
+@keyframes slide-left
+  0%
+    transform: translateX(100%)
+  100%
+    transform: translateX(0)

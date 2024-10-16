@@ -1,5 +1,16 @@
+.micro_deploy_admin-page-wrapper h2 {
+  margin: 0;
+  line-height: 10px;
+}
 .micro_deploy_admin-page-wrapper input {
   padding: 0.5rem;
+}
+.micro_deploy_admin-page-wrapper .micro-deploy-state {
+  flex-direction: column;
+  margin-top: 1rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 .micro_deploy_admin-page-wrapper button {
   background: wheat;
@@ -67,6 +78,7 @@
   font-weight: bold;
 }
 .micro_deploy_admin-page-wrapper .micro-deploy-created-micros {
+  margin-top: 1rem;
   text-align: center;
 }
 .micro_deploy_admin-page-wrapper .micro-deploy-created-micros .micro-deploy-micros {
