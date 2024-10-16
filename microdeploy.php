@@ -7,6 +7,7 @@ Author: Ștefan Secrieru
 */
 require_once(plugin_dir_path(__FILE__) . 'scripts/admin-dashboard.php');
 require_once(plugin_dir_path(__FILE__) . 'scripts/micro.php');
+require_once(plugin_dir_path(__FILE__) . 'scripts/state-manager.php');
 
 // Hook to add a menu option in the WordPress admin
 add_action('admin_menu', 'micro_deploy_generate_admin_dashboard_page');
@@ -143,16 +144,16 @@ add_action('template_redirect', function () {
 
 register_activation_hook(__FILE__, 'micro_deploy_initialize_db');
 
+
 function micro_deploy_initialize_db() {
     global $wpdb;
 
     $table_name = $wpdb->prefix . 'microdeploy_micros';
     $charset_collate = $wpdb->get_charset_collate();
 
-    if($wpdb->get_var("SHOW TABLES LIKE '$table_name'") === $table_name)
-        return;
+    if(!$wpdb->get_var("SHOW TABLES LIKE '$table_name'") === $table_name) {
 
-    $query = "
+        $query = "
       CREATE TABLE " . $table_name . "(
           id mediumint(9) NOT NULL AUTO_INCREMENT,
           name varchar(255) NOT NULL,
@@ -163,9 +164,60 @@ function micro_deploy_initialize_db() {
       ); 
     ";
 
-    require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
+        require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
 
-    $logs = dbDelta($query);
-    error_log('logs ' . print_r($logs, true));
+        $logs = dbDelta($query);
+        error_log('logs ' . print_r($logs, true));
+    }
+//    Settings table
+
+    $table_name = $wpdb->prefix . 'microdeploy_settings';
+    $charset_collate = $wpdb->get_charset_collate();
+
+    if(!($wpdb->get_var("SHOW TABLES LIKE '$table_name'") === $table_name)) {
+        error_log("ASD");
+        $query = "
+      CREATE TABLE " . $table_name . "(
+          id mediumint(9) NOT NULL AUTO_INCREMENT,
+          name varchar(255) NOT NULL,
+          value varchar(255) NOT NULL,
+          created_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          PRIMARY KEY  (id)
+      ); 
+    ";
+
+        require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
+
+        $logs = dbDelta($query);
+        error_log('logs ' . print_r($logs, true));
+    }
+
+
+
 }
 micro_deploy_initialize_db();
+
+
+add_action('init', 'micro_deploy_check_state_manager');
+function micro_deploy_register_rest(){
+    add_action('rest_api_init', function () {
+        register_rest_route('micro-deploy/v1', "/set-data", array(
+            'methods' => "POST",
+            'callback' => 'micro_deploy_set_data_rest'
+        ));
+    });
+}
+function micro_deploy_check_state_manager(){
+    global $wpdb;
+    $table_name = $wpdb->prefix . 'microdeploy_settings';
+    $results = $wpdb->get_results("SELECT * FROM $table_name");
+
+//    This means that the user did not ever initialize the state manager.
+//    Maybe he / she does not need it!
+    if(count($results) === 0)
+        return;
+
+    foreach($results as $result)
+        if($result->name === 'state_manager_initialized' && $result->value === 'true')
+            micro_deploy_register_rest();
+}

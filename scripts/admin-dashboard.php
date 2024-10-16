@@ -43,6 +43,10 @@ function micro_deploy_generate_admin_page() {
                 <input type="text" hidden name="initialize_state">
                 <button type="submit">Initialize state manager</button>
             </form>
+            <form action="" method="post">
+                <input type="text" hidden name="remove_state">
+                <button type="submit">Remove state manager</button>
+            </form>
         </div>
         <div class="micro-deploy-created-micros">
             <h2>Manage micros</h2>
@@ -52,6 +56,9 @@ function micro_deploy_generate_admin_page() {
             </div>
             <div class="micro-deploy-micros">
                 <?php
+                if(count($results) === 0)
+                    ?> <p>No micros yet.</p>
+                    <?php
                 foreach ($results as $micro) {
                     ?>
                     <div class="micro-deploy-admin-micro">
@@ -115,6 +122,9 @@ function micro_deploy_generate_admin_page() {
     if(isset($_POST['initialize_state']))
         micro_deploy_initialize_state_manager();
 
+    if(isset($_POST['remove_state']))
+        micro_deploy_remove_state_manager();
+
     if(isset($_POST['micro-deploy-fix-links']))
         micro_deploy_adjust_urls_static_serve($_POST['micro-deploy-fix-links'], $_POST['micro-deploy-fix-links-slug']);
 
@@ -141,4 +151,3 @@ function micro_deploy_generate_admin_page() {
     }
 
 }
-
