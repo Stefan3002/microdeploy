@@ -39,14 +39,16 @@ function micro_deploy_generate_admin_page() {
         <div class="micro-deploy-state">
             <h2>State Manager Service</h2>
             <p>───── ⋆⋅☆⋅⋆ ─────</p>
-            <form action="" method="post">
-                <input type="text" hidden name="initialize_state">
-                <button type="submit">Initialize state manager</button>
-            </form>
-            <form action="" method="post">
-                <input type="text" hidden name="remove_state">
-                <button type="submit">Remove state manager</button>
-            </form>
+            <div class="micro-deploy-state-options">
+                <form action="" method="post">
+                    <input type="text" hidden name="initialize_state">
+                    <button type="submit">Initialize state manager</button>
+                </form>
+                <form action="" method="post">
+                    <input type="text" hidden name="remove_state">
+                    <button type="submit">Remove state manager</button>
+                </form>
+            </div>
         </div>
         <div class="micro-deploy-created-micros">
             <h2>Manage micros</h2>

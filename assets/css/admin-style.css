@@ -12,6 +12,10 @@
   justify-content: center;
   align-items: center;
 }
+.micro_deploy_admin-page-wrapper .micro-deploy-state .micro-deploy-state-options {
+  display: flex;
+  gap: 0.5rem;
+}
 .micro_deploy_admin-page-wrapper button {
   background: wheat;
   border-radius: 10px;
@@ -72,7 +76,7 @@
 .micro_deploy_admin-page-wrapper .micro-deploy-admin-micro:hover, .micro_deploy_admin-page-wrapper .micro-deploy-admin-micro:focus {
   background: white;
   transition: all 0.15s ease-in-out;
-  box-shadow: rgba(50, 50, 93, 0.25) 0px 50px 100px -20px, black 0px 30px 60px -30px, rgba(10, 37, 64, 0.35) 0px -2px 6px 0px inset;
+  box-shadow: rgba(50, 50, 93, 0.25) 0px 50px 100px -20px, rgb(0, 0, 0) 0px 30px 60px -30px, rgba(10, 37, 64, 0.35) 0px -2px 6px 0px inset;
 }
 .micro_deploy_admin-page-wrapper .micro-deploy-admin-micro .micro_deploy_admin_micro_detail {
   font-weight: bold;

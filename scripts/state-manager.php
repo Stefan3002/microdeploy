@@ -1,10 +1,11 @@
 <?php
 $md_redis = null;
-function micro_deploy_initialize_state_manager () {
+function micro_deploy_initialize_state_manager ($silent = false) {
     global $md_redis;
     try {
         if($md_redis !== null) {
-            dispatch_success("State manager has already been initialized.");
+            if(!$silent)
+                dispatch_success("State manager has already been initialized.");
             return;
         }
         if(!extension_loaded('redis'))
@@ -13,35 +14,74 @@ function micro_deploy_initialize_state_manager () {
         
     }catch (Exception $e){
         error_log($e);
-        dispatch_error("Redis for PHP is not installed. Please contact your hosting provider.");
+        if(!$silent)
+            dispatch_error("Redis for PHP is not installed. Please contact your hosting provider.");
         return;
     }
-    micro_deploy_set_data("test", "test1234");
-    $test = micro_deploy_retrieve_data('test');
-    error_log("test" . $test);
-    dispatch_success("State manager has been initialized.");
+    if(!$silent)
+        dispatch_success("State manager has been initialized.");
 
     global $wpdb;
 //    Mark it in the DB!
     try {
         $table_name = $wpdb->prefix . 'microdeploy_settings';
-        $wpdb->insert($table_name, array(
-            'name' => 'state_manager_initialized',
-            'value' => 'true'
-        ));
+
+        $already_results = $wpdb->get_results("SELECT * FROM $table_name WHERE name = 'state_manager_initialized'");
+        error_log(print_r($already_results, true));
+        if(count($already_results) > 0)
+            $wpdb->update($table_name, array(
+                'value' => 'true'
+            ), array(
+                'id' => $already_results[0]->id
+            ));
+        else
+            $wpdb->insert($table_name, array(
+                'name' => 'state_manager_initialized',
+                'value' => 'true'
+            ));
     }catch (Exception $e){
         error_log($e);
-        dispatch_error("Could not register REST route.");
+        if(!$silent)
+            dispatch_error("Could not register REST route.");
     }
 
 }
 
 function micro_deploy_set_data_rest($request){
-    $data = $request->get_json_params();
+//    error_log(print_r($request, true));
+    $data = $request->get_body_params();
+
+    if(key_exists('key', $data) === false || key_exists('value', $data) === false)
+        return new WP_REST_RESPONSE([
+            'data' => "Missing key or value."
+        ], 400);
+
+//    Save in Redis
+    micro_deploy_set_data($data['key'], $data['value']);
+
+    return new WP_REST_RESPONSE([
+        'data' => "Successfully saved the state."
+    ], 200);
+}
+
+function micro_deploy_get_data_rest($request){
+//    error_log(print_r($request, true));
+    $data = $request->get_body_params();
+
+    if(key_exists('key', $data) === false || key_exists('value', $data) === false)
+        return new WP_REST_RESPONSE([
+            'data' => "Missing key or value."
+        ], 400);
+
+//    Save in Redis
+    $data = micro_deploy_get_data($data['key'], $data['value']);
+
     return new WP_REST_RESPONSE([
         'data' => $data
     ], 200);
 }
+
+
 function micro_deploy_retrieve_data ($key) {
     global $md_redis;
     try {
@@ -60,10 +100,29 @@ function micro_deploy_retrieve_data ($key) {
 
 function micro_deploy_set_data ($key, $value) {
     global $md_redis;
+
     try {
         $md_redis->set($key, $value);
 
         return true;
+    }catch (Exception $e){
+        error_log($e);
+//        dispatch_error("Could not retrieve data from Redis.");
+        return false;
+    }
+}
+
+
+function micro_deploy_get_data ($key, $value) {
+    global $md_redis;
+
+    try {
+        $data = $md_redis->get($key);
+        if(!$data){
+            error_log("Requested data is missing: " . $key);
+            return false;
+        }
+        return $data;
     }catch (Exception $e){
         error_log($e);
 //        dispatch_error("Could not retrieve data from Redis.");

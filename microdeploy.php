@@ -206,6 +206,13 @@ function micro_deploy_register_rest(){
             'callback' => 'micro_deploy_set_data_rest'
         ));
     });
+
+    add_action('rest_api_init', function () {
+        register_rest_route('micro-deploy/v1', "/get-data", array(
+            'methods' => "POST",
+            'callback' => 'micro_deploy_get_data_rest'
+        ));
+    });
 }
 function micro_deploy_check_state_manager(){
     global $wpdb;
@@ -218,6 +225,8 @@ function micro_deploy_check_state_manager(){
         return;
 
     foreach($results as $result)
-        if($result->name === 'state_manager_initialized' && $result->value === 'true')
+        if($result->name === 'state_manager_initialized' && $result->value === 'true') {
             micro_deploy_register_rest();
+            micro_deploy_initialize_state_manager(true);
+        }
 }
