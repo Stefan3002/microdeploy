@@ -65,10 +65,7 @@ function micro_deploy_set_data_rest($request){
         ], 400);
 
 //    Save in Redis
-    micro_deploy_set_data($data['key'], $data['value']);
-    return new WP_REST_RESPONSE([
-        'data' => "Successfully saved the state."
-    ], 200);
+    return micro_deploy_set_data($data['key'], $data['value']);
 }
 
 function micro_deploy_get_data_rest($request){
@@ -121,15 +118,44 @@ function micro_deploy_retrieve_data ($key) {
 function micro_deploy_set_data ($key, $value, $channel = "testc") {
     global $md_redis;
 
+//    Sanitize the key and value to prevent XSS
+    $key = sanitize_key($key);
+
+    try {
+        $json_test = json_decode($value, true);
+        if($json_test === null)
+            throw new Exception("Invalid JSON data (possibly XSS?): " . $value);
+    }catch (Exception $e){
+        error_log("JSON TEST for set API: " . $e);
+        micro_deploy_log_intrusion("Invalid JSON data (possibly XSS?): " . $value);
+        return new WP_REST_RESPONSE([
+            'data' => "Data sent is not a valid JSON."
+        ], 400);
+    }
+//    Sanitize each atomic value
+    if(!micro_deploy_sanitize_json($json_test)){
+        error_log("--Invalid JSON data (possibly XSS?): " . $value);
+        micro_deploy_log_intrusion("Invalid JSON data (possibly XSS?): " . $value);
+        return new WP_REST_RESPONSE([
+            'data' => "Data contains characters or structures that are not permitted!"
+        ], 400);
+    }
+
+    error_log("JSON TEST: " . print_r($json_test, true));
+
     try {
         $md_redis->set($key, $value);
         if($channel)
             $md_redis->publish($channel, $value);
-        return true;
+        return new WP_REST_RESPONSE([
+            'data' => "Data has been set."
+        ], 200);
     }catch (Exception $e){
         error_log($e);
 //        dispatch_error("Could not retrieve data from Redis.");
-        return false;
+        return new WP_REST_RESPONSE([
+            'data' => "Something went wrong"
+        ], 500);
     }
 }
 

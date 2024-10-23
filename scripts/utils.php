@@ -68,3 +68,57 @@ function micro_deploy_log_intrusion($message) {
     error_log($message);
     fclose($fd);
 }
+
+function micro_deploy_sanitize_atomic_data($value){
+    $sanitized = $value;
+    if(gettype($value) === "string")
+        $sanitized = sanitize_text_field($value);
+
+    if($sanitized !== $value)
+        error_log("Is this XSS??? " . "   " . $value);
+    return $sanitized === $value;
+}
+
+function micro_deploy_traverse_array($array) {
+    foreach($array as $array_value) {
+        $type = gettype($array_value);
+        if ($type === "object") {
+            if (!micro_deploy_sanitize_json($array_value))
+                return false;
+
+        }
+        else
+            if($type === "array") {
+                if (!micro_deploy_traverse_array($array_value))
+                    return false;
+
+            }
+            else
+                if($type === "boolean" || $type === "integer" || $type === "double" || $type === "string")
+                    if(!micro_deploy_sanitize_atomic_data($array_value))
+                        return false;
+
+
+    }
+    return true;
+}
+function micro_deploy_sanitize_json($json){
+    foreach ($json as $key => $value){
+        $type = gettype($value);
+        if($type === "boolean" || $type === "integer" || $type === "double" || $type === "string") {
+            if (!micro_deploy_sanitize_atomic_data($value))
+                return false;
+        }
+        else
+            if($type === "object") {
+                if (!micro_deploy_sanitize_json($value))
+                    return false;
+            }
+            else
+                if($type === "array")
+                    if(!micro_deploy_traverse_array($value))
+                        return false;
+
+    }
+    return true;
+}
