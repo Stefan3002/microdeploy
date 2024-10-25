@@ -29,7 +29,7 @@ function micro_deploy_generate_admin_page() {
                 <p>───── ⋆⋅☆⋅⋆ ─────</p>
                 <p>Note: Only upload the build folder of your micro frontend.</p>
                 <form action="" method="post" enctype="multipart/form-data">
-                    <input type="file" accept=".zip" required name="micro-deploy-add-new-micro-file">
+                    <input type="file" accept="application/zip" required name="micro-deploy-add-new-micro-file">
                     <input type="text" required placeholder="Name of micro" name="micro-deploy-add-new-micro-name">
                     <input type="text" required placeholder="Slug of micro" name="micro-deploy-add-new-micro-slug">
                     <button type="submit">Add micro</button>

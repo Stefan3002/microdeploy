@@ -8,12 +8,22 @@ Author: Ștefan Secrieru
 require_once(plugin_dir_path(__FILE__) . 'scripts/admin-dashboard.php');
 require_once(plugin_dir_path(__FILE__) . 'scripts/micro.php');
 require_once(plugin_dir_path(__FILE__) . 'scripts/state-manager.php');
+require_once(plugin_dir_path(__FILE__) . 'scripts/page-generators.php');
 
 // Hook to add a menu option in the WordPress admin
 add_action('admin_menu', 'micro_deploy_generate_admin_dashboard_page');
 
 function micro_deploy_generate_admin_dashboard_page() {
+//    add_submenu_page(
+//        'my-plugin-main',           // Parent slug (matches the main menu slug)
+//        'Settings',                 // Page title
+//        'Settings',                 // Submenu title
+//        'manage_options',           // Capability
+//        'my-plugin-settings',       // Menu slug for the subpage
+//        'my_plugin_settings_page'   // Callback function to display content
+//    );
     add_menu_page('Micro Deploy', 'Micro Deploy', 'manage_options', 'micro-deploy', 'micro_deploy_generate_admin_page');
+    add_submenu_page('micro-deploy', 'Settings', 'Settings', 'manage_options', 'settings', 'micro_deploy_generate_settings_page');
 }
 
 add_action('admin_enqueue_scripts', 'micro_deploy_enqueue_admin_styles');

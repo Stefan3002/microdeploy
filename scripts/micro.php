@@ -6,6 +6,14 @@ function add_micro() {
     $micro_name = $_POST['micro-deploy-add-new-micro-name'];
     $micro_slug = $_POST['micro-deploy-add-new-micro-slug'];
 
+//    SANITIZE the input file!
+    $file_validation = micro_deploy_sanitize_build_file($_FILES['micro-deploy-add-new-micro-file']);
+    if(!$file_validation['success']){
+        dispatch_error($file_validation['message']);
+        error_log($file_validation['message']);
+        return;
+    }
+    error_log('FILE! ' . print_r($_FILES['micro-deploy-add-new-micro-file'], true));
 // =========================
 //  Remove the first slash if existent
     if($micro_slug[0] === '/')
@@ -26,7 +34,7 @@ function add_micro() {
         dispatch_error('No files uploaded');
         return;
     }
-    $upload_directory = ABSPATH . 'wp-content\plugins\microdeploy\micros\\' . $micro_slug;
+    $upload_directory = ABSPATH . 'wp-content' . DIRECTORY_SEPARATOR . 'plugins' . DIRECTORY_SEPARATOR . 'microdeploy' . DIRECTORY_SEPARATOR . 'micros' . DIRECTORY_SEPARATOR . $micro_slug;
 
     $temp_file = $_FILES['micro-deploy-add-new-micro-file']['tmp_name'];
     if(!$temp_file){
@@ -34,7 +42,7 @@ function add_micro() {
         return;
     }
 
-
+//CHANGE THE TRIPLE SEVEN!
     if(!is_dir($upload_directory))
         if(mkdir($upload_directory, 0777, true)){
 
