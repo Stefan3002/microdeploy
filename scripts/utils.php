@@ -26,7 +26,6 @@ function micro_deploy_remove_folder($target_dir){
 
 
 function get_build_folder($path) {
-    error_log('BUILD PATH: ' . $path);
     if(is_dir($path . 'build'))
         return $path . 'build';
     elseif (is_dir($path . 'dist'))
@@ -137,4 +136,24 @@ function insert_db($table_name, $data) {
         ));
     else
         return $wpdb->insert($table_name, $data);
+}
+
+function micro_deploy_search_index_html($folder_path){
+    error_log("Searching for index.html in " . $folder_path);
+    $files = glob($folder_path . DIRECTORY_SEPARATOR . "*");
+
+    foreach($files as $file){
+        error_log("Checking " . basename($file));
+        if(is_dir($file)) {
+            $checked_file = micro_deploy_search_index_html($file);
+            if(basename($checked_file) === 'index.html')
+                return $checked_file;
+        }
+        else
+            if(basename($file) === 'index.html') {
+                error_log("Found index.html in " . $file);
+                return $file;
+            }
+    }
+    return false;
 }

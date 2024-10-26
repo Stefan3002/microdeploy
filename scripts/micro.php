@@ -179,11 +179,8 @@ function micro_deploy_adjust_urls_static_serve($micro_upload_directory, $micro_s
             }
             elseif($extension === 'js'){
                 $contents = file_get_contents($file);
-                $pattern2 = '/[\'"](?:[.]{0,2}\/?)([^\/\'"\s]+)\/?([^\'"\s]*\.png)[\'"]\s*/';
                 $pattern = '/[\'"](?:[.]{0,2}\/?)([^\/\'"\s]+)\/?([^\'"\s]*\.(svg|png|jpg|jpeg))[\'"]\s*/';
-                error_log('JS file ' . $file);
                 $updated_contents = preg_replace_callback($pattern, function($matches) use ($micro_slug) {
-                    error_log('JS match ' . print_r($matches, true));
 //                    Return the same link if it has already been parsed an modified accordingly.
                     if($matches[1] === $micro_slug)
                         return $matches[0];
