@@ -67,7 +67,7 @@ add_filter('query_vars', function ($query_vars) {
 });
 
 
-$micro_deploy_allowed_files = ['css', 'js', 'png', 'jpg', 'jpeg', 'html', 'htm', 'svg'];
+$micro_deploy_allowed_files = ['css', 'js', 'png', 'jpg', 'jpeg', 'html', 'htm', 'svg', 'json'];
 
 
 add_action('template_redirect', function () {
@@ -130,6 +130,10 @@ add_action('template_redirect', function () {
         }
         elseif ($extension === 'webp') {
             header('Content-Type: image/webp');
+            header('Content-Length: ' . filesize($static_file_path));
+        }
+        elseif ($extension === 'json') {
+            header('Content-Type: application/json');
             header('Content-Length: ' . filesize($static_file_path));
         }
         elseif ($extension === 'svg') {

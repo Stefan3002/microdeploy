@@ -114,13 +114,13 @@ function micro_deploy_get_slug_url($relative_path, $micro_slug, $root = true){
 }
 
 function micro_deploy_adjust_urls_static_serve($micro_upload_directory, $micro_slug) {
-    error_log($micro_upload_directory . ' ' . $micro_slug);
 
     $files = glob($micro_upload_directory . DIRECTORY_SEPARATOR . '*');
     foreach($files as $file) {
         if(is_dir($file))
             micro_deploy_adjust_urls_static_serve($file, $micro_slug);
         elseif (is_file($file)){
+
             if(!array_key_exists('extension', pathinfo($file)))
                 continue;
             $extension = pathinfo($file)['extension'];
@@ -148,15 +148,20 @@ function micro_deploy_adjust_urls_static_serve($micro_upload_directory, $micro_s
                 $pattern2 = '/href=\s*[\'"]?(?:[.]{0,2}(?!http)\/?)([^\/\'"\s]+)\/?([^\'"\s]*)[\'"]?\s*/';
 
                 $updated_contents = preg_replace_callback($pattern, function($matches) use ($micro_slug) {
-                    //                    Return the same link if it has already been parsed an modified accordingly.
+                    error_log('FILE ' . $matches[0]);
+                    // Return the same link if it has already been parsed an modified accordingly.
+//                    matches[1] is a capturing group that contains the first part of the URL (between the first two slashes /)
                     if($matches[1] === $micro_slug)
                         return $matches[0];
 
                     $match = trim('/' . $matches[1] . '/' . $matches[2], ".");
                     $new_url = micro_deploy_get_slug_url($match, $micro_slug);
+                    error_log('HTML ' . 'src=\'' . $new_url . '\'');
                     return 'src=\'' . $new_url . '\'';
 
                 }, $contents);
+
+
                 file_put_contents($file, $updated_contents);
                 $contents = file_get_contents($file);
                 $updated_contents = preg_replace_callback($pattern2, function($matches) use ($micro_slug) {
@@ -174,21 +179,19 @@ function micro_deploy_adjust_urls_static_serve($micro_upload_directory, $micro_s
             }
             elseif($extension === 'js'){
                 $contents = file_get_contents($file);
-                $pattern = '/[\'"](?:[.]{0,2}\/?)([^\/\'"\s]+)\/?([^\'"\s]*\.svg)[\'"]\s*/';
+                $pattern2 = '/[\'"](?:[.]{0,2}\/?)([^\/\'"\s]+)\/?([^\'"\s]*\.png)[\'"]\s*/';
+                $pattern = '/[\'"](?:[.]{0,2}\/?)([^\/\'"\s]+)\/?([^\'"\s]*\.(svg|png|jpg|jpeg))[\'"]\s*/';
+                error_log('JS file ' . $file);
                 $updated_contents = preg_replace_callback($pattern, function($matches) use ($micro_slug) {
+                    error_log('JS match ' . print_r($matches, true));
 //                    Return the same link if it has already been parsed an modified accordingly.
                     if($matches[1] === $micro_slug)
                         return $matches[0];
 
                     $match = trim('/' . $matches[1] . '/' . $matches[2], ".");
-
                     $new_url = "\"" . micro_deploy_get_slug_url($match, $micro_slug, false) . "\"";
-
-
-
-                    error_log("awdawdawdawd " . $new_url . '----' . parse_url(home_url())['host']);
+//                    return $new_url;
                     return $new_url;
-
                 }, $contents);
                 file_put_contents($file, $updated_contents);
             }
