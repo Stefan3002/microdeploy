@@ -67,7 +67,7 @@ add_filter('query_vars', function ($query_vars) {
 });
 
 
-$micro_deploy_allowed_files = ['css', 'js', 'png', 'jpg', 'jpeg', 'html', 'htm', 'svg', 'json'];
+$micro_deploy_allowed_files = ['css', 'js', 'png', 'jpg', 'jpeg', 'html', 'htm', 'svg', 'json', 'ico'];
 
 
 add_action('template_redirect', function () {
@@ -136,6 +136,10 @@ add_action('template_redirect', function () {
             header('Content-Type: application/json');
             header('Content-Length: ' . filesize($static_file_path));
         }
+        elseif ($extension === 'ico') {
+            header('Content-Type: image/vnd.microsoft.icon');
+            header('Content-Length: ' . filesize($static_file_path));
+        }
         elseif ($extension === 'svg') {
             header('Content-Type: image/svg+xml');
             header('Content-Length: ' . filesize($static_file_path));
@@ -165,13 +169,14 @@ function micro_deploy_initialize_db() {
     $table_name = $wpdb->prefix . 'microdeploy_micros';
     $charset_collate = $wpdb->get_charset_collate();
 
-    if(!$wpdb->get_var("SHOW TABLES LIKE '$table_name'") === $table_name) {
+    if(!($wpdb->get_var("SHOW TABLES LIKE '$table_name'") === $table_name)) {
 
         $query = "
       CREATE TABLE " . $table_name . "(
           id mediumint(9) NOT NULL AUTO_INCREMENT,
           name varchar(255) NOT NULL,
           slug varchar(255) NOT NULL,
+          tech varchar(255) NOT NULL,
           path varchar(255) NOT NULL,
           created_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
           PRIMARY KEY  (id)
@@ -189,7 +194,6 @@ function micro_deploy_initialize_db() {
     $charset_collate = $wpdb->get_charset_collate();
 
     if(!($wpdb->get_var("SHOW TABLES LIKE '$table_name'") === $table_name)) {
-        error_log("ASD");
         $query = "
       CREATE TABLE " . $table_name . "(
           id mediumint(9) NOT NULL AUTO_INCREMENT,

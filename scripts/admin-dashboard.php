@@ -32,6 +32,12 @@ function micro_deploy_generate_admin_page() {
                     <input type="file" accept="application/zip" required name="micro-deploy-add-new-micro-file">
                     <input type="text" required placeholder="Name of micro" name="micro-deploy-add-new-micro-name">
                     <input type="text" required placeholder="Slug of micro" name="micro-deploy-add-new-micro-slug">
+                    <label for="">Technology of micro frontend</label>
+                    <select type="text" required placeholder="Technology" name="micro-deploy-add-new-micro-tech">
+                        <option value="react">React</option>
+                        <option value="angular">Angular</option>
+                        <option value="vanilla">Vanilla</option>
+                    </select>
                     <button type="submit">Add micro</button>
                 </form>
             </div>
@@ -133,6 +139,12 @@ function micro_deploy_generate_admin_page() {
     if(isset($_FILES['micro-deploy-add-new-micro-file'])) {
         $micro_name = $_POST['micro-deploy-add-new-micro-name'];
         $micro_slug = $_POST['micro-deploy-add-new-micro-slug'];
+        $micro_tech = $_POST['micro-deploy-add-new-micro-tech'];
+
+        if(!isset($micro_tech)){
+            dispatch_error("Missing technology of the micro");
+            return;
+        }
         if(!isset($micro_name) || strlen($micro_name) == 0) {
             dispatch_error("Missing name of the micro");
             return;

@@ -28,7 +28,7 @@ function micro_deploy_generate_settings_page(){
     global $wpdb;
     $table_name = "microdeploy_settings";
     $micro_table_name = $wpdb->prefix . $table_name;
-
+//TODO: ADD the settings at INIT TIME IN PLUGIN!!!
     if(isset($_POST['micro-deploy-settings-reset-max-upload'])){
         if(!insert_db($micro_table_name, array(
             'name' => 'max_upload',

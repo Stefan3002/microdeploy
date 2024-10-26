@@ -5,6 +5,7 @@ function add_micro() {
 
     $micro_name = $_POST['micro-deploy-add-new-micro-name'];
     $micro_slug = $_POST['micro-deploy-add-new-micro-slug'];
+    $micro_tech = $_POST['micro-deploy-add-new-micro-tech'];
 
 //    SANITIZE the input file!
     $file_validation = micro_deploy_sanitize_build_file($_FILES['micro-deploy-add-new-micro-file']);
@@ -42,7 +43,7 @@ function add_micro() {
         return;
     }
 
-//CHANGE THE TRIPLE SEVEN!
+//TODO: CHANGE THE TRIPLE SEVEN!
     if(!is_dir($upload_directory))
         if(mkdir($upload_directory, 0777, true)){
 
@@ -59,7 +60,7 @@ function add_micro() {
             $zip->close();
             unlink($upload_directory_file);
 //            Add the rewrite rules
-            link_micro($upload_directory, $micro_slug, $micro_name);
+            link_micro($upload_directory, $micro_slug, $micro_name, $micro_tech);
 //            Change the URLS for static serving!
             micro_deploy_adjust_urls_static_serve($upload_directory, $micro_slug);
             dispatch_success('Micro uploaded to server successfully');
@@ -76,7 +77,7 @@ function add_micro() {
     }
 }
 
-function link_micro($upload_directory_file, $micro_slug, $micro_name) {
+function link_micro($upload_directory_file, $micro_slug, $micro_name, $micro_tech) {
     global $wpdb;
 
     $micro_table_name = $wpdb->prefix . 'microdeploy_micros';
@@ -84,6 +85,7 @@ function link_micro($upload_directory_file, $micro_slug, $micro_name) {
     $data = array(
         'name' => sanitize_text_field($micro_name),
         'slug' => sanitize_text_field($micro_slug),
+        'tech' => sanitize_text_field($micro_tech),
         'path' => sanitize_text_field($upload_directory_file),
     );
 
