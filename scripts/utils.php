@@ -123,49 +123,18 @@ function micro_deploy_sanitize_json($json){
     return true;
 }
 
-function micro_deploy_sanitize_build_file($file_data) {
-    $allowed_file_types = ['application/zip'];
-
-    $file_type = $file_data['type'];
-
-    if(!in_array($file_type, $allowed_file_types))
-        return [
-        "success" => false,
-        "message" => "Invalid file type!"
-    ];
-
-//    Check the MIME type
-//    $file_info = finfo.open($file_data['tmp_name']);
-//    $mime_type = finfo.file($file_info);
-//
-//    error_log("MIME TYPE: " . $mime_type);
-
-//    Check the size
-    $file_size = $file_data['size'];
-//10MB
-    if($file_size > 10000000)
-        return [
-        "success" => false,
-        "message" => "File size is too large!"
-        ];
-
-    return [
-        "success" => true
-    ];
-}
-
 function insert_db($table_name, $data) {
     global $wpdb;
 
     $data_name = $data['name'];
     $already_results = $wpdb->get_results("SELECT * FROM $table_name WHERE name = 'max_upload'");
-    error_log(print_r($already_results, true));
+
     if(count($already_results) > 0)
-        $wpdb->update($table_name, array(
+        return $wpdb->update($table_name, array(
             'value' => $data['value']
         ), array(
             'id' => $already_results[0]->id
         ));
     else
-        $wpdb->insert($table_name, $data);
+        return $wpdb->insert($table_name, $data);
 }

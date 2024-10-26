@@ -25,7 +25,7 @@
 .micro_deploy_admin-page-wrapper .micro-deploy-delete-button {
   background: crimson;
   color: whitesmoke;
-  border: 2px solid white;
+  border: 1px solid black;
 }
 .micro_deploy_admin-page-wrapper .micro-deploy-option-forms {
   display: flex;
@@ -92,6 +92,10 @@
   justify-content: center;
   align-items: center;
   flex-wrap: wrap;
+}
+
+.micro-deploy-form-marginated-top {
+  margin-top: 1rem;
 }
 
 /*# sourceMappingURL=admin-style.css.map */

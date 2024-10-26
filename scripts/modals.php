@@ -1,6 +1,7 @@
 <?php
 
 function dispatch_error($message) {
+    error_log('ERROR: ' . $message);
     ?>
     <div class='micro-deploy-modal micro-deploy-modal-error'>
         <p><?php _e($message) ?></p>

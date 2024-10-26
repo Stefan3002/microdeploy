@@ -208,7 +208,7 @@ function micro_deploy_initialize_db() {
 micro_deploy_initialize_db();
 
 
-add_action('init', 'micro_deploy_check_state_manager');
+add_action('init', 'micro_deploy_load_settings');
 function micro_deploy_register_rest(){
     add_action('rest_api_init', function () {
         register_rest_route('micro-deploy/v1', "/set-data", array(
@@ -224,19 +224,25 @@ function micro_deploy_register_rest(){
         ));
     });
 }
-function micro_deploy_check_state_manager(){
+function micro_deploy_load_settings(){
     global $wpdb;
     $table_name = $wpdb->prefix . 'microdeploy_settings';
     $results = $wpdb->get_results("SELECT * FROM $table_name");
 
-//    This means that the user did not ever initialize the state manager.
-//    Maybe he / she does not need it!
+    $max_upload_found = false;
     if(count($results) === 0)
         return;
 
-    foreach($results as $result)
-        if($result->name === 'state_manager_initialized' && $result->value === 'true') {
+    foreach($results as $result) {
+        if ($result->name === 'state_manager_initialized' && $result->value === 'true') {
             micro_deploy_register_rest();
             micro_deploy_initialize_state_manager(true);
         }
+        if($result->name === 'max_upload') {
+            $max_upload_found = true;
+            $GLOBALS['micro_deploy_max_upload'] = $result->value;
+        }
+    }
+    if(!$max_upload_found)
+        $GLOBALS['micro_deploy_max_upload'] = 10000000;
 }
