@@ -83,6 +83,7 @@ function micro_deploy_generate_admin_page() {
                             <form class="micro_deploy_admin_form" action="" method="POST">
                                 <input type="text" hidden name="micro-deploy-fix-links" value="<?php _e($micro->path) ?>">
                                 <input type="text" hidden name="micro-deploy-fix-links-slug" value="<?php _e($micro->slug) ?>">
+                                <input type="text" hidden name="micro-deploy-fix-links-tech" value="<?php _e($micro->tech) ?>">
                                 <button type="submit">PARSE LINKS</button>
                             </form>
                         </div>
@@ -134,7 +135,7 @@ function micro_deploy_generate_admin_page() {
         micro_deploy_remove_state_manager();
 
     if(isset($_POST['micro-deploy-fix-links']))
-        micro_deploy_adjust_urls_static_serve($_POST['micro-deploy-fix-links'], $_POST['micro-deploy-fix-links-slug']);
+        micro_deploy_adjust_urls_static_serve($_POST['micro-deploy-fix-links'], $_POST['micro-deploy-fix-links-slug'], $_POST['micro-deploy-fix-links-tech']);
 
     if(isset($_FILES['micro-deploy-add-new-micro-file'])) {
         $micro_name = $_POST['micro-deploy-add-new-micro-name'];

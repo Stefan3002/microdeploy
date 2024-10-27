@@ -87,6 +87,8 @@ add_action('template_redirect', function () {
     if($micro_static_file !== -1) {
         if (array_key_exists('extension', pathinfo($micro_static_file)))
             $extension = pathinfo($micro_static_file)['extension'];
+        else
+            return;
 //        ONLY ALLOW CERTAIN TYPES OF FILES
         if(!in_array($extension, $micro_deploy_allowed_files)){
             micro_deploy_log_intrusion("Forbidden file type attempt to access: " . $extension);
@@ -153,7 +155,7 @@ add_action('template_redirect', function () {
     }
 
 //Actually search for the index.html!!
-    $upload_directory_file = get_build_folder(plugin_dir_path(__FILE__) . 'micros' . DIRECTORY_SEPARATOR . $micro_target . DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'index.html';
+//    $upload_directory_file = get_build_folder(plugin_dir_path(__FILE__) . 'micros' . DIRECTORY_SEPARATOR . $micro_target . DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'index.html';
     $upload_directory_file = micro_deploy_search_index_html(get_build_folder(plugin_dir_path(__FILE__) . 'micros' . DIRECTORY_SEPARATOR . $micro_target . DIRECTORY_SEPARATOR));
     include $upload_directory_file;
 
