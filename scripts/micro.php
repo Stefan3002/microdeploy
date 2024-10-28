@@ -6,6 +6,7 @@ function add_micro() {
     $micro_name = $_POST['micro-deploy-add-new-micro-name'];
     $micro_slug = $_POST['micro-deploy-add-new-micro-slug'];
     $micro_tech = $_POST['micro-deploy-add-new-micro-tech'];
+    $micro_build = $_POST['micro-deploy-add-new-micro-build'];
 
 //    SANITIZE the input file!
     $file_validation = micro_deploy_sanitize_build_file($_FILES['micro-deploy-add-new-micro-file']);
@@ -60,9 +61,9 @@ function add_micro() {
             $zip->close();
             unlink($upload_directory_file);
 //            Add the rewrite rules
-            link_micro($upload_directory, $micro_slug, $micro_name, $micro_tech);
+            link_micro($upload_directory, $micro_slug, $micro_name, $micro_tech, $micro_build);
 //            Change the URLS for static serving!
-            micro_deploy_adjust_urls_static_serve($upload_directory, $micro_slug, $micro_tech);
+            micro_deploy_adjust_urls_static_serve($upload_directory, $micro_slug, $micro_tech, $micro_build);
             dispatch_success('Micro uploaded to server successfully');
         }
         else{
@@ -77,7 +78,7 @@ function add_micro() {
     }
 }
 
-function link_micro($upload_directory_file, $micro_slug, $micro_name, $micro_tech) {
+function link_micro($upload_directory_file, $micro_slug, $micro_name, $micro_tech, $micro_build) {
     global $wpdb;
 
     $micro_table_name = $wpdb->prefix . 'microdeploy_micros';
@@ -86,6 +87,7 @@ function link_micro($upload_directory_file, $micro_slug, $micro_name, $micro_tec
         'name' => sanitize_text_field($micro_name),
         'slug' => sanitize_text_field($micro_slug),
         'tech' => sanitize_text_field($micro_tech),
+        'build' => sanitize_text_field($micro_build),
         'path' => sanitize_text_field($upload_directory_file),
     );
 
@@ -94,6 +96,7 @@ function link_micro($upload_directory_file, $micro_slug, $micro_name, $micro_tec
         dispatch_error('Could not insert data into the table');
         return;
     }
+//    TODO: Does this make sense anymore?
     add_rewrite_rule(
         '^' . $micro_slug . '/?$',
         'index.php?micro=landing-page',
@@ -115,11 +118,11 @@ function micro_deploy_get_slug_url($relative_path, $micro_slug, $root = true){
         return $micro_slug . $relative_path;
 }
 
-function micro_deploy_adjust_urls_static_serve($micro_upload_directory, $micro_slug, $micro_tech = 'vanilla') {
+function micro_deploy_adjust_urls_static_serve($micro_upload_directory, $micro_slug, $micro_tech = 'vanilla', $micro_build = 'cra') {
     $files = glob($micro_upload_directory . DIRECTORY_SEPARATOR . '*');
     foreach($files as $file) {
         if(is_dir($file))
-            micro_deploy_adjust_urls_static_serve($file, $micro_slug, $micro_tech);
+            micro_deploy_adjust_urls_static_serve($file, $micro_slug, $micro_tech, $micro_build);
         elseif (is_file($file)){
 
             if(!array_key_exists('extension', pathinfo($file)))
@@ -143,8 +146,6 @@ function micro_deploy_adjust_urls_static_serve($micro_upload_directory, $micro_s
                     $match = trim( $matches[1] . '/' . $matches[2], "./");
                     $match = '/' . $match;
                     $new_url = micro_deploy_get_slug_url($match, $micro_slug . $extra_slug);
-                    error_log('CSSS ' . 'url(\'' . $new_url . '\')' . '  == ' . $matches[1] . "  ---  " . $matches[2]);
-                    error_log('ALOHAA CSS ' . $new_url);
                     return 'url(\'' . $new_url . '\')';
 
                 }, $contents);
@@ -173,7 +174,8 @@ function micro_deploy_adjust_urls_static_serve($micro_upload_directory, $micro_s
                     if($matches[1] === $micro_slug)
                         return $matches[0];
 
-                    $match = trim('/' . $matches[1] . '/' . $matches[2], ".");
+                    $match = trim($matches[1] . '/' . $matches[2], "./");
+                    $match = '/' . $match;
                     $new_url = micro_deploy_get_slug_url($match, $micro_slug . $extra_slug);
                     error_log('ALOHAA HTML 0 ' . $matches[1]);
                     return 'src=\'' . $new_url . '\'';
@@ -188,7 +190,8 @@ function micro_deploy_adjust_urls_static_serve($micro_upload_directory, $micro_s
                     if($matches[1] === $micro_slug)
                         return $matches[0];
 
-                    $match = trim('/' . $matches[1] . '/' . $matches[2], ".");
+                    $match = trim('/' . $matches[1] . '/' . $matches[2], "./");
+                    $match = '/' . $match;
                     $new_url = micro_deploy_get_slug_url($match, $micro_slug . $extra_slug);
                     error_log('ALOHAA HTML ' . $matches[1]);
                     return 'href=\'' . $new_url . '\'';
@@ -200,17 +203,25 @@ function micro_deploy_adjust_urls_static_serve($micro_upload_directory, $micro_s
             elseif($extension === 'js'){
                 $contents = file_get_contents($file);
                 $pattern = '/[\'"](?:[.]{0,2}\/?)([^\/\'"\s]+)\/?([^\'"\s]*\.(svg|png|jpg|jpeg|webp))[\'"]\s*/';
-                $updated_contents = preg_replace_callback($pattern, function($matches) use ($extra_slug, $micro_slug) {
+                $updated_contents = preg_replace_callback($pattern, function($matches) use ($micro_tech, $micro_build, $extra_slug, $micro_slug) {
 //                    Return the same link if it has already been parsed an modified accordingly.
 //                    error_log("ALOHA! " . $matches[0] . ' ' . $matches[1] . ' ' . $matches[2]);
 
                     if($matches[1] === $micro_slug)
                         return $matches[0];
 
-                    $match = trim('/' . $matches[1] . '/' . $matches[2], ".");
-                    $new_url = "\"" . micro_deploy_get_slug_url($match, $micro_slug . $extra_slug, false) . "\"";
+                    $match = trim('/' . $matches[1] . '/' . $matches[2], "./");
+                    $match = '/' . $match;
 
-                    error_log('ALOHAA JS ' . $matches[1]);
+
+                    $leading_slash = false;
+//                    If VITE
+                    if($micro_tech === 'react' && $micro_build === 'vite')
+                        $leading_slash = true;
+
+                    $new_url = "\"" . micro_deploy_get_slug_url($match, $micro_slug . $extra_slug, $leading_slash) . "\"";
+
+                    error_log('ALOHAA JS ' . $matches[1] . ' === ' . $new_url);
                     return $new_url;
                 }, $contents);
                 file_put_contents($file, $updated_contents);

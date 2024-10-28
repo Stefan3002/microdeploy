@@ -118,11 +118,6 @@ add_action('template_redirect', function () {
         }
 
 
-        if (!file_exists($static_file_path)) {
-            header("HTTP/1.1 404 Not Found");
-            header("Content-Type: text/plain");
-            exit();
-        }
 
         if ($extension === 'css')
             header('Content-Type: text/css');
@@ -185,6 +180,7 @@ function micro_deploy_initialize_db() {
           name varchar(255) NOT NULL,
           slug varchar(255) NOT NULL,
           tech varchar(255) NOT NULL,
+          build varchar(255) NOT NULL,
           path varchar(255) NOT NULL,
           created_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
           PRIMARY KEY  (id)

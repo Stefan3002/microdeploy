@@ -38,6 +38,11 @@ function micro_deploy_generate_admin_page() {
                         <option value="angular">Angular</option>
                         <option value="vanilla">Vanilla</option>
                     </select>
+                    <label for="">Build tool of micro frontend</label>
+                    <select type="text" required placeholder="Build tool" name="micro-deploy-add-new-micro-build">
+                        <option value="cra">CRA</option>
+                        <option value="vite">Vite</option>
+                    </select>
                     <button type="submit">Add micro</button>
                 </form>
             </div>
@@ -137,15 +142,20 @@ function micro_deploy_generate_admin_page() {
         micro_deploy_remove_state_manager();
 
     if(isset($_POST['micro-deploy-fix-links']))
-        micro_deploy_adjust_urls_static_serve($_POST['micro-deploy-fix-links'], $_POST['micro-deploy-fix-links-slug'], $_POST['micro-deploy-fix-links-tech']);
+        micro_deploy_adjust_urls_static_serve($_POST['micro-deploy-fix-links'], $_POST['micro-deploy-fix-links-slug'], $_POST['micro-deploy-fix-links-tech'], $_POST['micro-deploy-fix-links-build']);
 
     if(isset($_FILES['micro-deploy-add-new-micro-file'])) {
         $micro_name = $_POST['micro-deploy-add-new-micro-name'];
         $micro_slug = $_POST['micro-deploy-add-new-micro-slug'];
         $micro_tech = $_POST['micro-deploy-add-new-micro-tech'];
+        $micro_build = $_POST['micro-deploy-add-new-micro-build'];
 
         if(!isset($micro_tech)){
             dispatch_error("Missing technology of the micro");
+            return;
+        }
+        if(!isset($micro_build)){
+            dispatch_error("Missing build tool of the micro");
             return;
         }
         if(!isset($micro_name) || strlen($micro_name) == 0) {
