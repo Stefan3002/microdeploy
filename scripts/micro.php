@@ -131,7 +131,7 @@ function micro_deploy_adjust_urls_static_serve($micro_upload_directory, $micro_s
             if($micro_tech === 'angular')
                 $extra_slug = '/browser';
 
-            //                Verify if there are urls in CSS file
+            // Verify if there are urls in CSS file
             if($extension === 'css'){
                 $contents = file_get_contents($file);
                 $pattern = '/url\(\s*[\'"]?(?:[.]{0,2}\/?)([^\/\'"\s]+)\/?([^\'"\s)]*)[\'"]?\s*\)/';
@@ -140,10 +140,11 @@ function micro_deploy_adjust_urls_static_serve($micro_upload_directory, $micro_s
                     if($matches[1] === $micro_slug)
                         return $matches[0];
 
-                    $match = trim('/' . $matches[1] . '/' . $matches[2], ".");
+                    $match = trim( $matches[1] . '/' . $matches[2], "./");
+                    $match = '/' . $match;
                     $new_url = micro_deploy_get_slug_url($match, $micro_slug . $extra_slug);
                     error_log('CSSS ' . 'url(\'' . $new_url . '\')' . '  == ' . $matches[1] . "  ---  " . $matches[2]);
-
+                    error_log('ALOHAA CSS ' . $new_url);
                     return 'url(\'' . $new_url . '\')';
 
                 }, $contents);
@@ -174,6 +175,7 @@ function micro_deploy_adjust_urls_static_serve($micro_upload_directory, $micro_s
 
                     $match = trim('/' . $matches[1] . '/' . $matches[2], ".");
                     $new_url = micro_deploy_get_slug_url($match, $micro_slug . $extra_slug);
+                    error_log('ALOHAA HTML 0 ' . $matches[1]);
                     return 'src=\'' . $new_url . '\'';
 
                 }, $contents);
@@ -188,6 +190,7 @@ function micro_deploy_adjust_urls_static_serve($micro_upload_directory, $micro_s
 
                     $match = trim('/' . $matches[1] . '/' . $matches[2], ".");
                     $new_url = micro_deploy_get_slug_url($match, $micro_slug . $extra_slug);
+                    error_log('ALOHAA HTML ' . $matches[1]);
                     return 'href=\'' . $new_url . '\'';
 
                 }, $contents);
@@ -196,14 +199,18 @@ function micro_deploy_adjust_urls_static_serve($micro_upload_directory, $micro_s
             }
             elseif($extension === 'js'){
                 $contents = file_get_contents($file);
-                $pattern = '/[\'"](?:[.]{0,2}\/?)([^\/\'"\s]+)\/?([^\'"\s]*\.(svg|png|jpg|jpeg))[\'"]\s*/';
+                $pattern = '/[\'"](?:[.]{0,2}\/?)([^\/\'"\s]+)\/?([^\'"\s]*\.(svg|png|jpg|jpeg|webp))[\'"]\s*/';
                 $updated_contents = preg_replace_callback($pattern, function($matches) use ($extra_slug, $micro_slug) {
 //                    Return the same link if it has already been parsed an modified accordingly.
+//                    error_log("ALOHA! " . $matches[0] . ' ' . $matches[1] . ' ' . $matches[2]);
+
                     if($matches[1] === $micro_slug)
                         return $matches[0];
 
                     $match = trim('/' . $matches[1] . '/' . $matches[2], ".");
                     $new_url = "\"" . micro_deploy_get_slug_url($match, $micro_slug . $extra_slug, false) . "\"";
+
+                    error_log('ALOHAA JS ' . $matches[1]);
                     return $new_url;
                 }, $contents);
                 file_put_contents($file, $updated_contents);

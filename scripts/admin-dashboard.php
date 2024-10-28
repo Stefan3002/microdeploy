@@ -64,9 +64,11 @@ function micro_deploy_generate_admin_page() {
             </div>
             <div class="micro-deploy-micros">
                 <?php
-                if(count($results) === 0)
-                    ?> <p>No micros yet.</p>
+                if(count($results) === 0){
+                    ?>
+                    <p>No micros yet.</p>
                     <?php
+                }
                 foreach ($results as $micro) {
                     ?>
                     <div class="micro-deploy-admin-micro">

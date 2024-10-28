@@ -67,7 +67,7 @@ add_filter('query_vars', function ($query_vars) {
 });
 
 
-$micro_deploy_allowed_files = ['css', 'js', 'png', 'jpg', 'jpeg', 'html', 'htm', 'svg', 'json', 'ico'];
+$micro_deploy_allowed_files = ['css', 'js', 'png', 'jpg', 'jpeg', 'html', 'htm', 'svg', 'json', 'ico', 'webp'];
 
 
 add_action('template_redirect', function () {
@@ -103,7 +103,13 @@ add_action('template_redirect', function () {
         //MITIGATE DIRECTORY ATTACKS
 //        Never return anything that is not in the micro folder already
         $static_file_path = realpath($static_file_path);
-
+//        realpath returns false if the file does not exist!!!!
+        if(!$static_file_path){
+            header("HTTP/1.1 404 Not Found");
+            header("Content-Type: text/plain");
+            exit("File not found.");
+        }
+//        Check again to see if the file is in the micro folder
         if(strpos($static_file_path, $base_allowed_path) !== 0){
             micro_deploy_log_intrusion("Forbidden file attempt to access: " . $static_file_path . "\n");
             header("HTTP/1.1 403 Forbidden");
