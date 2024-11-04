@@ -24,7 +24,7 @@ function micro_deploy_generate_admin_page() {
             <p class="micro_deploy_catch">Enable complete micro frontend applications to coexist with WordPress content</p>
         </div>
         <div class="micro-deploy-admin-page-content">
-            <div class="micro-deploy-admin-page-new-micro">
+            <div class="micro-deploy-admin-page-new-micro micro-deploy-card">
                 <h2>Add a new micro frontend.</h2>
                 <p>───── ⋆⋅☆⋅⋆ ─────</p>
                 <p>Note: Only upload the build folder of your micro frontend.</p>
@@ -42,6 +42,7 @@ function micro_deploy_generate_admin_page() {
                     <select type="text" required placeholder="Build tool" name="micro-deploy-add-new-micro-build">
                         <option value="cra">CRA</option>
                         <option value="vite">Vite</option>
+                        <option value="none">None</option>
                     </select>
                     <button type="submit">Add micro</button>
                 </form>
@@ -76,7 +77,7 @@ function micro_deploy_generate_admin_page() {
                 }
                 foreach ($results as $micro) {
                     ?>
-                    <div class="micro-deploy-admin-micro">
+                    <div class="micro-deploy-admin-micro micro-deploy-card">
                         <p>Name: <span class="micro_deploy_admin_micro_detail"><?php _e($micro->name) ?></span></p>
                         <p>Slug: <span class="micro_deploy_admin_micro_detail">/<?php _e($micro->slug) ?></span></p>
                         <p><?php _e($micro->created_at) ?></p>
@@ -91,6 +92,7 @@ function micro_deploy_generate_admin_page() {
                                 <input type="text" hidden name="micro-deploy-fix-links" value="<?php _e($micro->path) ?>">
                                 <input type="text" hidden name="micro-deploy-fix-links-slug" value="<?php _e($micro->slug) ?>">
                                 <input type="text" hidden name="micro-deploy-fix-links-tech" value="<?php _e($micro->tech) ?>">
+                                <input type="text" hidden name="micro-deploy-fix-links-build" value="<?php _e($micro->build) ?>">
                                 <button type="submit">PARSE LINKS</button>
                             </form>
                         </div>

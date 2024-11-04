@@ -11,9 +11,7 @@ require_once(plugin_dir_path(__FILE__) . 'scripts/state-manager.php');
 require_once(plugin_dir_path(__FILE__) . 'scripts/page-generators.php');
 
 // Hook to add a menu option in the WordPress admin
-add_action('admin_menu', 'micro_deploy_generate_admin_dashboard_page');
-
-function micro_deploy_generate_admin_dashboard_page() {
+add_action('admin_menu', function () {
 //    add_submenu_page(
 //        'my-plugin-main',           // Parent slug (matches the main menu slug)
 //        'Settings',                 // Page title
@@ -23,8 +21,12 @@ function micro_deploy_generate_admin_dashboard_page() {
 //        'my_plugin_settings_page'   // Callback function to display content
 //    );
     add_menu_page('Micro Deploy', 'Micro Deploy', 'manage_options', 'micro-deploy', 'micro_deploy_generate_admin_page');
-    add_submenu_page('micro-deploy', 'Settings', 'Settings', 'manage_options', 'settings', 'micro_deploy_generate_settings_page');
-}
+    add_submenu_page('micro-deploy', 'Deployment Settings', 'Settings', 'manage_options', 'settings', 'micro_deploy_generate_settings_page');
+    add_submenu_page('micro-deploy', 'Deployment Errors', 'Errors', 'manage_options', 'errors', 'micro_deploy_generate_errors_page');
+    add_submenu_page('micro-deploy', 'About Microdeploy', 'About', 'manage_options', 'about', 'micro_deploy_generate_about_page');
+});
+
+
 
 add_action('admin_enqueue_scripts', 'micro_deploy_enqueue_admin_styles');
 
@@ -32,7 +34,7 @@ function micro_deploy_enqueue_admin_styles() {
     wp_enqueue_style('micro-deploy-admin-styles', plugins_url('assets/css/admin-style.css', __FILE__));
     wp_enqueue_style('micro-deploy-general-styles', plugins_url('assets/css/general.css', __FILE__));
 
-    wp_enqueue_script('react', plugins_url('micros/test123/build/static/js/main.15dc85d0.js', __FILE__));
+//    wp_enqueue_script('react', plugins_url('micros/test123/build/static/js/main.15dc85d0.js', __FILE__));
 }
 
 add_action('init', function () {
@@ -72,7 +74,8 @@ $micro_deploy_allowed_files = ['css', 'js', 'png', 'jpg', 'jpeg', 'html', 'htm',
 
 add_action('template_redirect', function () {
     global $micro_deploy_allowed_files;
-    ob_start();
+    global $wpdb;
+    $micro_table_name = $wpdb->prefix . 'microdeploy_errors';
     $micro_target = get_query_var('micro', -1);
     $micro_static_file = get_query_var('static_file', -1);
 
@@ -99,12 +102,24 @@ add_action('template_redirect', function () {
 
         $base_allowed_path = realpath(get_build_folder(plugin_dir_path(__FILE__) . 'micros' . DIRECTORY_SEPARATOR . $micro_target . DIRECTORY_SEPARATOR));
         $static_file_path = $base_allowed_path . DIRECTORY_SEPARATOR . $micro_static_file;
-
+        $static_file_path_copy = $static_file_path;
         //MITIGATE DIRECTORY ATTACKS
 //        Never return anything that is not in the micro folder already
         $static_file_path = realpath($static_file_path);
 //        realpath returns false if the file does not exist!!!!
         if(!$static_file_path){
+//          Remember the error in the DB
+            $data = [
+                'name' => 'path',
+                'data_value' => $static_file_path_copy,
+                'value_name' => 'path',
+                'value_change' => $static_file_path_copy,
+                'value' => [
+                    'type' => "static_serve",
+                    'path' => $static_file_path_copy
+                    ]
+            ];
+            insert_db($micro_table_name, $data);
             header("HTTP/1.1 404 Not Found");
             header("Content-Type: text/plain");
             exit("File not found.");
@@ -192,6 +207,30 @@ function micro_deploy_initialize_db() {
         $logs = dbDelta($query);
         error_log('logs ' . print_r($logs, true));
     }
+//    Errors table
+    $table_name = $wpdb->prefix . 'microdeploy_errors';
+    $charset_collate = $wpdb->get_charset_collate();
+
+    if(!($wpdb->get_var("SHOW TABLES LIKE '$table_name'") === $table_name)) {
+
+        $query = "
+      CREATE TABLE " . $table_name . "(
+          id mediumint(9) NOT NULL AUTO_INCREMENT,
+          type varchar(255) NOT NULL,
+          path varchar(255) NOT NULL,
+          created_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          PRIMARY KEY  (id)
+      ); 
+    ";
+
+        require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
+
+        $logs = dbDelta($query);
+        error_log('logs ' . print_r($logs, true));
+    }
+
+
+
 //    Settings table
 
     $table_name = $wpdb->prefix . 'microdeploy_settings';

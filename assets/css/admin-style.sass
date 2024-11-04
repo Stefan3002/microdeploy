@@ -45,28 +45,12 @@
     justify-content: center
     align-items: center
     .micro-deploy-admin-page-new-micro
-      background: whitesmoke
-      text-align: center
-      border: 2px solid black
-      border-radius: 10px
-      padding: 1rem
       form
         display: flex
         flex-direction: column
         justify-content: center
         gap: 1rem
         //align-items: center
-  .micro-deploy-admin-micro
-    border: 2px solid black
-    border-radius: 10px
-    padding: 1rem
-    transition: all .15s ease-in-out
-    &:hover, &:focus
-      background: white
-      transition: all .15s ease-in-out
-      box-shadow: rgba(50, 50, 93, 0.25) 0px 50px 100px -20px, rgba(0, 0, 0, 1) 0px 30px 60px -30px, rgba(10, 37, 64, 0.35) 0px -2px 6px 0px inset
-    .micro_deploy_admin_micro_detail
-      font-weight: bold
   .micro-deploy-created-micros
     margin-top: 1rem
     text-align: center
@@ -81,3 +65,42 @@
 
 .micro-deploy-form-marginated-top
   margin-top: 1rem
+
+.micro-deploy-big-number
+  font-size: 2rem
+  font-weight: bold
+
+
+.micro-deploy-card
+  box-shadow: rgba(50, 50, 93, 0.25) 0px 6px 12px -2px, rgba(0, 0, 0, 0.3) 0px 3px 7px -3px
+  background: white
+  border: 2px solid black
+  border-radius: 10px
+  padding: 1rem
+  transition: all .15s ease-in-out
+  text-align: center
+  &:hover, &:focus
+    background: white
+    transition: all .15s ease-in-out
+    box-shadow: rgba(50, 50, 93, 0.25) 0px 50px 100px -20px, rgba(0, 0, 0, 1) 0px 30px 60px -30px, rgba(10, 37, 64, 0.35) 0px -2px 6px 0px inset
+  .micro_deploy_admin_micro_detail
+    font-weight: bold
+
+.micro-deploy-small-card
+  max-width: 300px
+  text-align: justify
+  ul
+    padding-left: 10px
+
+.micro-deploy-settings-page-content
+  display: flex
+  gap: .5rem
+  justify-content: center
+  align-items: stretch !important
+
+.centered-title
+  display: flex
+  flex-direction: column
+  gap: 0
+  justify-content: center
+  align-items: center

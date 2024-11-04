@@ -8,7 +8,7 @@ function micro_deploy_generate_settings_page(){
         <p>by Ștefan Secrieru</p>
     </div>
     <div class="micro-deploy-admin-page-content">
-        <div class="micro-deploy-admin-page-new-micro">
+        <div class="micro-deploy-admin-page-new-micro micro-deploy-card">
             <h2>Max file upload size</h2>
             <p>───── ⋆⋅☆⋅⋆ ─────</p>
             <form action="" method="post">
@@ -31,7 +31,10 @@ function micro_deploy_generate_settings_page(){
 //TODO: ADD the settings at INIT TIME IN PLUGIN!!!
     if(isset($_POST['micro-deploy-settings-reset-max-upload'])){
         if(!insert_db($micro_table_name, array(
-            'name' => 'max_upload',
+            'name' => 'name',
+            'value_name' => 'value',
+            'data_value' => 'max_upload',
+            'value_change' => 10000000,
             'value' => 10000000
         )))
             dispatch_error("Could not reset the settings.");
@@ -59,7 +62,10 @@ function micro_deploy_generate_settings_page(){
 
 
         if(!insert_db($micro_table_name, array(
-            'name' => 'max_upload',
+            'name' => 'name',
+            'data_value' => 'max_upload',
+            'value_name' => 'value',
+            'value_change' => $size,
             'value' => $size
         )))
             dispatch_error("Could not save the settings.");
@@ -69,4 +75,87 @@ function micro_deploy_generate_settings_page(){
         }
     }
 
+}
+function micro_deploy_generate_errors_page() {
+    global $wpdb;
+
+    $micro_table_name = $wpdb->prefix . 'microdeploy_errors';
+    $results = $wpdb->get_results("SELECT * FROM $micro_table_name WHERE type='static_serve'");
+
+    ?>
+    <div class='micro_deploy_admin-page-wrapper'>
+        <div class="micro_deploy_admin-page-header">
+            <h2 class="micro_deploy_title">Micro Deploy</h2>
+            <p>by Ștefan Secrieru</p>
+        </div>
+        <section class="micro-deploy-settings-page-content">
+                <div class="micro-deploy-admin-page-new-micro micro-deploy-card">
+                    <h2>Static Serving Faults</h2>
+                    <p>───── ⋆⋅☆⋅⋆ ─────</p>
+                    <p>Number of static serving faults encountered:</p>
+                    <span class="micro-deploy-big-number"><?php _e(count($results)) ?></span>
+                </div>
+            <?php if(count($results) !== 0){ ?>
+                <div class="micro-deploy-admin-page-new-micro micro-deploy-card">
+                    <h2>Static Serving Faults URLs</h2>
+                    <p>───── ⋆⋅☆⋅⋆ ─────</p>
+                    <p>The following static assets requests encountered an error:</p>
+                    <ul>
+                        <?php
+                            foreach($results as $result){
+                                ?>
+                                <li><?php _e($result->path) ?></li>
+                                <?php
+                            }
+                        }
+                        ?>
+                    </ul>
+                </div>
+        </section>
+    </div>
+    <?php
+}
+
+function micro_deploy_generate_about_page() {
+    ?>
+    <div class='micro_deploy_admin-page-wrapper'>
+        <div class="micro_deploy_admin-page-header">
+            <h2 class="micro_deploy_title">Micro Deploy</h2>
+            <p>by Ștefan Secrieru</p>
+        </div>
+        <div class="micro-deploy-admin-page-content micro-deploy-settings-page-content">
+            <div class="micro-deploy-admin-page-new-micro micro-deploy-card micro-deploy-small-card">
+                <div class="centered-title">
+                    <h2>About Functionalities</h2>
+                    <p>───── ⋆⋅☆⋅⋆ ─────</p>
+                </div>
+                <p>Micro Deploy is a plugin that enables you to deploy micro frontends on your WordPress website.</p>
+            </div>
+            <div class="micro-deploy-admin-page-new-micro micro-deploy-card micro-deploy-small-card">
+                <div class="centered-title">
+                    <h2>About Subpages</h2>
+                    <p>───── ⋆⋅☆⋅⋆ ─────</p>
+                </div>
+                <p>Following are the subpages of the plugin:</p>
+                <ul>
+                    <li><b>Settings</b> contains various settings of the plugin.</li>
+                    <li><b>Errors</b> contains all the errors that the plugin encountered. These include but are not limited to:</li>
+                    <ul>
+                        <li>Static asset delivery fails</li>
+                    </ul>
+                </ul>
+            </div>
+            <div class="micro-deploy-admin-page-new-micro micro-deploy-card micro-deploy-small-card">
+                <div class="centered-title">
+                    <h2>About Limitations</h2>
+                    <p>───── ⋆⋅☆⋅⋆ ─────</p>
+                </div>
+                <p>Here are the main limitations of the plugin and steps on how to overcome them:</p>
+                <ul>
+                    <li><b>React Js</b> developers have to manually set the base of their routing system to match the chosen slug in the deployment process of the micro-frontend</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <?php
 }

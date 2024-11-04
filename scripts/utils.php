@@ -126,16 +126,19 @@ function insert_db($table_name, $data) {
     global $wpdb;
 
     $data_name = $data['name'];
-    $already_results = $wpdb->get_results("SELECT * FROM $table_name WHERE name = 'max_upload'");
-
+    $data_value = $data['data_value'];
+    $value_name = $data['value_name'];
+    $already_results = $wpdb->get_results("SELECT * FROM $table_name WHERE $data_name = '$data_value'");
+    error_log(print_r($already_results, true));
     if(count($already_results) > 0)
         return $wpdb->update($table_name, array(
-            'value' => $data['value']
+            $value_name => $data['value_change']
         ), array(
             'id' => $already_results[0]->id
         ));
-    else
-        return $wpdb->insert($table_name, $data);
+    else {
+        return $wpdb->insert($table_name, $data['value']);
+    }
 }
 
 function micro_deploy_search_index_html($folder_path){
