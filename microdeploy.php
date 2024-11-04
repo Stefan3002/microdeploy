@@ -132,6 +132,12 @@ add_action('template_redirect', function () {
             exit("Forbidden: You do not have permission to access this resource.");
         }
 
+//        If served successfully, remove the error from the DB
+        $results = $wpdb->get_results("SELECT * FROM $micro_table_name WHERE path = '$static_file_path_copy'");
+        if(count($results) > 0)
+            $wpdb->delete($micro_table_name, array(
+                'id' => $results[0]->id
+            ));
 
 
         if ($extension === 'css')

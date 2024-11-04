@@ -160,3 +160,15 @@ function micro_deploy_search_index_html($folder_path){
     }
     return false;
 }
+
+function micro_deploy_handle_regex_errors($error_code, $updated_contents, $contents){
+    if($error_code === 2)
+        dispatch_error("Maximum backtrack limit reached when parsing.");
+    if($error_code === 3)
+        dispatch_error("Maximum recursion limit reached when parsing.");
+//                If there were errors, just keep the original content
+    if($error_code !== 0)
+        return $contents;
+    else
+        return $updated_contents;
+}

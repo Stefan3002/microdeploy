@@ -149,6 +149,7 @@ function micro_deploy_adjust_urls_static_serve($micro_upload_directory, $micro_s
                     return 'url(\'' . $new_url . '\')';
 
                 }, $contents);
+                $updated_contents = micro_deploy_handle_regex_errors(preg_last_error(), $updated_contents, $contents);
                 file_put_contents($file, $updated_contents);
             }
             elseif($extension === 'html' || $extension === 'htm'){
@@ -164,6 +165,7 @@ function micro_deploy_adjust_urls_static_serve($micro_upload_directory, $micro_s
 
                         return '<base href="/' . $micro_slug . '/">';
                     }, $contents);
+                    $updated_contents = micro_deploy_handle_regex_errors(preg_last_error(), $updated_contents, $contents);
                     file_put_contents($file, $updated_contents);
                 }
                 $contents = file_get_contents($file);
@@ -182,8 +184,9 @@ function micro_deploy_adjust_urls_static_serve($micro_upload_directory, $micro_s
 
                 }, $contents);
 
-
+                $updated_contents = micro_deploy_handle_regex_errors(preg_last_error(), $updated_contents, $contents);
                 file_put_contents($file, $updated_contents);
+
                 $contents = file_get_contents($file);
                 $updated_contents = preg_replace_callback($pattern2, function($matches) use ($extra_slug, $micro_slug) {
                     //                    Return the same link if it has already been parsed an modified accordingly.
@@ -197,16 +200,18 @@ function micro_deploy_adjust_urls_static_serve($micro_upload_directory, $micro_s
                     return 'href=\'' . $new_url . '\'';
 
                 }, $contents);
+                $updated_contents = micro_deploy_handle_regex_errors(preg_last_error(), $updated_contents, $contents);
                 file_put_contents($file, $updated_contents);
 
             }
             elseif($extension === 'js'){
                 $contents = file_get_contents($file);
+//                TODO: Add it as a setting
+//                ini_set('pcre.backtrack_limit', '100000000');
                 $pattern = '/[\'"](?:[.]{0,2}\/?)([^\/\'"\s]+)\/?([^\'"\s]*\.(svg|png|jpg|jpeg|webp))[\'"]\s*/';
                 $updated_contents = preg_replace_callback($pattern, function($matches) use ($micro_tech, $micro_build, $extra_slug, $micro_slug) {
 //                    Return the same link if it has already been parsed an modified accordingly.
 //                    error_log("ALOHA! " . $matches[0] . ' ' . $matches[1] . ' ' . $matches[2]);
-
                     if($matches[1] === $micro_slug)
                         return $matches[0];
 
@@ -221,9 +226,9 @@ function micro_deploy_adjust_urls_static_serve($micro_upload_directory, $micro_s
 
                     $new_url = "\"" . micro_deploy_get_slug_url($match, $micro_slug . $extra_slug, $leading_slash) . "\"";
 
-                    error_log('ALOHAA JS ' . $matches[1] . ' === ' . $new_url);
                     return $new_url;
                 }, $contents);
+                $updated_contents = micro_deploy_handle_regex_errors(preg_last_error(), $updated_contents, $contents);
                 file_put_contents($file, $updated_contents);
             }
         }

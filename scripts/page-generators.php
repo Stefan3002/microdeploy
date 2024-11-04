@@ -22,6 +22,20 @@ function micro_deploy_generate_settings_page(){
                 <button type="submit" class="micro-deploy-delete-button">Reset</button>
             </form>
         </div>
+        <div class="micro-deploy-admin-page-new-micro micro-deploy-card">
+            <h2>Max parser backtrack limit</h2>
+            <p>───── ⋆⋅☆⋅⋆ ─────</p>
+            <form action="" method="post">
+                <label for="micro-deploy-settings-max-file-upload">Number of allowed backtracking operations of the PHP PCRE</label>
+                <p>Default: 100.000 operations</p>
+                <input type="text" id="micro-deploy-settings-max-file-upload" required value="<?php _e($GLOBALS["micro_deploy_max_backtrack"]) ?> " placeholder="Max file upload" name="micro-deploy-settings-max-file-upload">
+                <button type="submit">Save</button>
+            </form>
+            <form class="micro-deploy-form-marginated-top" action="" method="POST">
+                <input hidden name="micro-deploy-settings-reset-max-upload">
+                <button type="submit" class="micro-deploy-delete-button">Reset</button>
+            </form>
+        </div>
     </div>
 </div>
 <?php
@@ -96,15 +110,24 @@ function micro_deploy_generate_errors_page() {
                     <span class="micro-deploy-big-number"><?php _e(count($results)) ?></span>
                 </div>
             <?php if(count($results) !== 0){ ?>
-                <div class="micro-deploy-admin-page-new-micro micro-deploy-card">
+                <div class="micro-deploy-admin-page-new-micro micro-deploy-card micro-deploy-max-height-card">
                     <h2>Static Serving Faults URLs</h2>
                     <p>───── ⋆⋅☆⋅⋆ ─────</p>
+                    <form action="" method="POST">
+                        <input type="text" hidden name="micro_deploy_delete_all_errors">
+                        <button type="submit">Delete all records</button>
+                    </form>
                     <p>The following static assets requests encountered an error:</p>
                     <ul>
                         <?php
                             foreach($results as $result){
                                 ?>
-                                <li><?php _e($result->path) ?></li>
+                                <li><?php _e($result->path) ?>
+                                    <form action="" method="POST">
+                                        <input type="text" hidden name="micro_deploy_delete_error" value="<?php _e($result->id) ?>">
+                                        <button type="submit">Delete</button>
+                                    </form>
+                                </li>
                                 <?php
                             }
                         }
@@ -114,6 +137,23 @@ function micro_deploy_generate_errors_page() {
         </section>
     </div>
     <?php
+    if(isset($_POST['micro_deploy_delete_error']))
+        if($wpdb->delete($micro_table_name, array(
+            'id' => $_POST['micro_deploy_delete_error']
+        ))) {
+            dispatch_success("Error deleted.");
+        } else {
+            dispatch_error("Could not delete error.");
+        }
+    if(isset($_POST['micro_deploy_delete_all_errors']))
+        foreach($results as $result)
+            if($wpdb->delete($micro_table_name, array(
+                'id' => $result->id
+            ))) {
+                dispatch_success("Error deleted.");
+            } else {
+                dispatch_error("Could not delete error.");
+            }
 }
 
 function micro_deploy_generate_about_page() {
