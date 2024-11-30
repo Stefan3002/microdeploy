@@ -26,13 +26,13 @@ function micro_deploy_generate_settings_page(){
             <h2>Max parser backtrack limit</h2>
             <p>───── ⋆⋅☆⋅⋆ ─────</p>
             <form action="" method="post">
-                <label for="micro-deploy-settings-max-file-upload">Number of allowed backtracking operations of the PHP PCRE</label>
+                <label for="micro-deploy-settings-max-backtrack">Number of allowed backtracking operations of the PHP PCRE</label>
                 <p>Default: 100.000 operations</p>
-                <input type="text" id="micro-deploy-settings-max-file-upload" required value="<?php _e($GLOBALS["micro_deploy_max_backtrack"]) ?> " placeholder="Max file upload" name="micro-deploy-settings-max-file-upload">
+                <input type="text" id="micro-deploy-settings-max-backtrack" required value="<?php _e($GLOBALS["micro_deploy_max_backtrack"]) ?> " placeholder="Max file upload" name="micro-deploy-settings-max-backtrack">
                 <button type="submit">Save</button>
             </form>
             <form class="micro-deploy-form-marginated-top" action="" method="POST">
-                <input hidden name="micro-deploy-settings-reset-max-upload">
+                <input hidden name="micro-deploy-settings-reset-max-backtrack">
                 <button type="submit" class="micro-deploy-delete-button">Reset</button>
             </form>
         </div>
@@ -49,16 +49,52 @@ function micro_deploy_generate_settings_page(){
             'value_name' => 'value',
             'data_value' => 'max_upload',
             'value_change' => 10000000,
-            'value' => 10000000
+            'value' => 10000000,
+            'new_record_value' => array(
+                'name' => 'max_upload',
+                'value' => 10000000
+            )
         )))
             dispatch_error("Could not reset the settings.");
         else
             dispatch_success("Settings reset.");
     }
 
+    if(isset($_POST['micro-deploy-settings-reset-max-backtrack'])){
+        if(!insert_db($micro_table_name, array(
+            'name' => 'name',
+            'value_name' => 'value',
+            'data_value' => 'max_backtrack',
+            'value_change' => 100000,
+            'value' => 100000,
+            'new_record_value' => array(
+                'name' => 'max_backtrack',
+                'value' => 100000
+            )
+        )))
+            dispatch_error("Could not reset the settings.");
+        else
+            dispatch_success("Settings reset.");
+    }
 
-    if(isset($_POST['micro-deploy-settings-max-file-upload'])){
+    $data_value = null;
+    $size = null;
+    $global_name = null;
+
+    if(isset($_POST['micro-deploy-settings-max-file-upload'])) {
+        $data_value = 'max_upload';
         $size = $_POST['micro-deploy-settings-max-file-upload'];
+        $global_name = 'micro_deploy_max_upload';
+    }
+
+    if(isset($_POST['micro-deploy-settings-max-backtrack'])) {
+        $data_value = 'max_backtrack';
+        $size = $_POST['micro-deploy-settings-max-backtrack'];
+        $global_name = 'micro_deploy_max_backtrack';
+    }
+
+
+    if($data_value !== null) {
 //        Validate the size!
         $size = trim($size);
         if(!micro_deploy_validate_input(array(
@@ -77,14 +113,18 @@ function micro_deploy_generate_settings_page(){
 
         if(!insert_db($micro_table_name, array(
             'name' => 'name',
-            'data_value' => 'max_upload',
+            'data_value' => $data_value,
             'value_name' => 'value',
             'value_change' => $size,
-            'value' => $size
+            'value' => $size,
+            'new_record_value' => array(
+                'name' => $data_value,
+                'value' => $size
+            )
         )))
             dispatch_error("Could not save the settings.");
         else{
-            $GLOBALS["micro_deploy_max_upload"] = $size;
+            $GLOBALS[$global_name] = $size;
             dispatch_success("Settings saved.");
         }
     }

@@ -207,7 +207,7 @@ function micro_deploy_adjust_urls_static_serve($micro_upload_directory, $micro_s
             elseif($extension === 'js'){
                 $contents = file_get_contents($file);
 //                TODO: Add it as a setting
-//                ini_set('pcre.backtrack_limit', '100000000');
+                ini_set('pcre.backtrack_limit', $GLOBALS['micro_deploy_max_backtrack']);
                 $pattern = '/[\'"](?:[.]{0,2}\/?)([^\/\'"\s]+)\/?([^\'"\s]*\.(svg|png|jpg|jpeg|webp))[\'"]\s*/';
                 $updated_contents = preg_replace_callback($pattern, function($matches) use ($micro_tech, $micro_build, $extra_slug, $micro_slug) {
 //                    Return the same link if it has already been parsed an modified accordingly.

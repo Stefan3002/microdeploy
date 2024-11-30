@@ -287,6 +287,7 @@ function micro_deploy_load_settings(){
     $results = $wpdb->get_results("SELECT * FROM $table_name");
 
     $max_upload_found = false;
+    $max_backtrack_found = false;
     if(count($results) === 0)
         return;
 
@@ -299,7 +300,14 @@ function micro_deploy_load_settings(){
             $max_upload_found = true;
             $GLOBALS['micro_deploy_max_upload'] = $result->value;
         }
+        if($result->name === 'max_backtrack') {
+            $max_backtrack_found = true;
+            $GLOBALS['micro_deploy_max_backtrack'] = $result->value;
+        }
     }
     if(!$max_upload_found)
         $GLOBALS['micro_deploy_max_upload'] = 10000000;
+    if(!$max_backtrack_found)
+        $GLOBALS['micro_deploy_max_backtrack'] = 100000;
 }
+

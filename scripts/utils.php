@@ -137,7 +137,7 @@ function insert_db($table_name, $data) {
             'id' => $already_results[0]->id
         ));
     else {
-        return $wpdb->insert($table_name, $data['value']);
+        return $wpdb->insert($table_name, $data['new_record_value']);
     }
 }
 
