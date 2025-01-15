@@ -161,11 +161,18 @@ function micro_deploy_adjust_urls_static_serve($micro_upload_directory, $micro_s
 //                This is only needed for angular build where href="/" will not be picked up by the other patterns in Regex
                 if($micro_tech === 'angular' && (basename($file) === 'index.html' || basename($file) === 'index.htm')) {
                     $pattern3 = '/<base href=[\"\']\/[\"\']>/';
-                    $updated_contents = preg_replace_callback($pattern3, function($matches) use ($micro_slug) {
+                    if(preg_match($pattern3, $contents)) {
 
-                        return '<base href="/' . $micro_slug . '/">';
-                    }, $contents);
-                    $updated_contents = micro_deploy_handle_regex_errors(preg_last_error(), $updated_contents, $contents);
+                        $updated_contents = preg_replace_callback($pattern3, function ($matches) use ($micro_slug) {
+
+                            return '<base href="/' . $micro_slug . '/">';
+                        }, $contents);
+
+                        $updated_contents = micro_deploy_handle_regex_errors(preg_last_error(), $updated_contents, $contents);
+                    }
+                    else{
+                        $updated_contents = $contents . ' <base href="/' . $micro_slug . '/">';
+                    }
                     file_put_contents($file, $updated_contents);
                 }
                 $contents = file_get_contents($file);
