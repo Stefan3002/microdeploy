@@ -227,8 +227,8 @@ function micro_deploy_adjust_urls_static_serve($micro_upload_directory, $micro_s
 
 
                     $leading_slash = false;
-//                    If VITE
-                    if($micro_tech === 'react' && $micro_build === 'vite')
+//                    If VITE or Angular!
+                    if(($micro_tech === 'react' && $micro_build === 'vite') || $micro_tech === 'angular')
                         $leading_slash = true;
 
                     $new_url = "\"" . micro_deploy_get_slug_url($match, $micro_slug . $extra_slug, $leading_slash) . "\"";
