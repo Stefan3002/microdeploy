@@ -36,6 +36,7 @@ function micro_deploy_generate_admin_page() {
                     <select type="text" required placeholder="Technology" name="micro-deploy-add-new-micro-tech">
                         <option value="react">React</option>
                         <option value="angular">Angular</option>
+                        <option value="vue">Vue</option>
                         <option value="vanilla">Vanilla</option>
                     </select>
                     <label for="">Build tool of micro frontend</label>
