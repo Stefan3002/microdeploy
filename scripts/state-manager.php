@@ -29,7 +29,7 @@ function micro_deploy_initialize_state_manager ($silent = false) {
         $table_name = $wpdb->prefix . 'microdeploy_settings';
 
         $already_results = $wpdb->get_results("SELECT * FROM $table_name WHERE name = 'state_manager_initialized'");
-        error_log(print_r($already_results, true));
+//        error_log(print_r($already_results, true));
         if(count($already_results) > 0)
             $wpdb->update($table_name, array(
                 'value' => 'true'

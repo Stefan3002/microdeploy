@@ -121,7 +121,37 @@ function micro_deploy_sanitize_json($json){
     }
     return true;
 }
+function insert_db_wrapper($table_name, $data_value, $size, $global_name, $form_trigger_name = null)
+{
+    global $wpdb;
+    $micro_table_name = $wpdb->prefix . $table_name;
 
+    if ($form_trigger_name == null || isset($_POST[$form_trigger_name])) {
+
+        $already_results = $wpdb->get_results("SELECT * FROM $micro_table_name WHERE name = '$data_value' AND value = '$size'");
+        error_log(print_r($already_results, true));
+        if(count($already_results) > 0) {
+            dispatch_success("Settings already saved.");
+            return;
+        }
+        if (!insert_db($micro_table_name, array(
+            'name' => 'name',
+            'data_value' => $data_value,
+            'value_name' => 'value',
+            'value_change' => $size,
+            'value' => $size,
+            'new_record_value' => array(
+                'name' => $data_value,
+                'value' => $size
+            )
+        )))
+            dispatch_error("Could not save the settings.");
+        else {
+            $GLOBALS[$global_name] = $size;
+            dispatch_success("Settings saved.");
+        }
+    }
+}
 function insert_db($table_name, $data) {
     global $wpdb;
 

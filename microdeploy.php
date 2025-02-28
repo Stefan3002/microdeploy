@@ -22,6 +22,7 @@ add_action('admin_menu', function () {
 //    );
     add_menu_page('Micro Deploy', 'Micro Deploy', 'manage_options', 'micro-deploy', 'micro_deploy_generate_admin_page');
     add_submenu_page('micro-deploy', 'Deployment Settings', 'Settings', 'manage_options', 'settings', 'micro_deploy_generate_settings_page');
+    add_submenu_page('micro-deploy', 'Deployment Performance', 'Performance', 'manage_options', 'performance', 'micro_deploy_generate_performance_page');
     add_submenu_page('micro-deploy', 'Deployment Errors', 'Errors', 'manage_options', 'errors', 'micro_deploy_generate_errors_page');
     add_submenu_page('micro-deploy', 'About Microdeploy', 'About', 'manage_options', 'about', 'micro_deploy_generate_about_page');
 });
@@ -288,6 +289,7 @@ function micro_deploy_load_settings(){
 
     $max_upload_found = false;
     $max_backtrack_found = false;
+    $enabled_performance_found = false;
     if(count($results) === 0)
         return;
 
@@ -304,10 +306,16 @@ function micro_deploy_load_settings(){
             $max_backtrack_found = true;
             $GLOBALS['micro_deploy_max_backtrack'] = $result->value;
         }
+        if($result->name === 'enabled_performance') {
+            $enabled_performance_found = true;
+            $GLOBALS['micro_deploy_enabled_performance'] = $result->value;
+        }
     }
     if(!$max_upload_found)
         $GLOBALS['micro_deploy_max_upload'] = 10000000;
     if(!$max_backtrack_found)
         $GLOBALS['micro_deploy_max_backtrack'] = 100000;
+    if(!$enabled_performance_found)
+        $GLOBALS['micro_deploy_enabled_performance'] = false;
 }
 
