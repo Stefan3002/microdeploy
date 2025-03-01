@@ -121,7 +121,7 @@ function micro_deploy_sanitize_json($json){
     }
     return true;
 }
-function insert_db_wrapper($table_name, $data_value, $size, $global_name, $form_trigger_name = null)
+function insert_db_wrapper($table_name, $data_value, $size, $global_name, $form_trigger_name = null, callable $callback = null)
 {
     global $wpdb;
     $micro_table_name = $wpdb->prefix . $table_name;
@@ -147,7 +147,13 @@ function insert_db_wrapper($table_name, $data_value, $size, $global_name, $form_
         )))
             dispatch_error("Could not save the settings.");
         else {
+            if($size === 'true')
+                $size = true;
+            elseif($size === 'false')
+                $size = false;
             $GLOBALS[$global_name] = $size;
+            if($callback !== null)
+                $callback();
             dispatch_success("Settings saved.");
         }
     }
@@ -172,11 +178,11 @@ function insert_db($table_name, $data) {
 }
 
 function micro_deploy_search_index_html($folder_path){
-    error_log("Searching for index.html in " . $folder_path);
+//    error_log("Searching for index.html in " . $folder_path);
     $files = glob($folder_path . DIRECTORY_SEPARATOR . "*");
 
     foreach($files as $file){
-        error_log("Checking " . basename($file));
+//        error_log("Checking " . basename($file));
         if(is_dir($file)) {
             $checked_file = micro_deploy_search_index_html($file);
             if(basename($checked_file) === 'index.html')

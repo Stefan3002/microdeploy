@@ -9,6 +9,7 @@ require_once(plugin_dir_path(__FILE__) . 'scripts/admin-dashboard.php');
 require_once(plugin_dir_path(__FILE__) . 'scripts/micro.php');
 require_once(plugin_dir_path(__FILE__) . 'scripts/state-manager.php');
 require_once(plugin_dir_path(__FILE__) . 'scripts/page-generators.php');
+require_once(plugin_dir_path(__FILE__) . 'scripts/performance.php');
 
 // Hook to add a menu option in the WordPress admin
 add_action('admin_menu', function () {
@@ -308,7 +309,10 @@ function micro_deploy_load_settings(){
         }
         if($result->name === 'enabled_performance') {
             $enabled_performance_found = true;
-            $GLOBALS['micro_deploy_enabled_performance'] = $result->value;
+            if($result->value === 'true')
+                $GLOBALS['micro_deploy_enabled_performance'] = true;
+            else
+                $GLOBALS['micro_deploy_enabled_performance'] = false;
         }
     }
     if(!$max_upload_found)

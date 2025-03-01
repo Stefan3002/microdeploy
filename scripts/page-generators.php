@@ -82,6 +82,7 @@ function micro_deploy_generate_settings_page(){
     }
 
 }
+
 function micro_deploy_generate_performance_page() {
     global $wpdb;
 
@@ -93,8 +94,13 @@ function micro_deploy_generate_performance_page() {
     $data_value = 'enabled_performance';
     $size = 'true';
     $global_name = 'micro_deploy_enabled_performance';
-    insert_db_wrapper($table_name, $data_value, $size, $global_name, 'micro_deploy_enable_performance');
+
+    insert_db_wrapper($table_name, $data_value, $size, $global_name, 'micro_deploy_enable_performance', 'add_performance_client_data_to_micros');
     insert_db_wrapper($table_name, $data_value, 'false', $global_name, 'micro_deploy_reset_performance');
+
+    if(isset($_POST['micro_deploy_reparse_performance'])){
+        add_performance_client_data_to_micros();
+    }
 
     ?>
     <div class='micro_deploy_admin-page-wrapper'>
@@ -102,7 +108,7 @@ function micro_deploy_generate_performance_page() {
             <h2 class="micro_deploy_title">Micro Deploy</h2>
             <p>by Ștefan Secrieru</p>
         </div>
-        <section class="micro-deploy-settings-page-content">
+        <section class="micro-deploy-admin-page-content marginated-bottom">
             <div class="micro-deploy-admin-page-new-micro micro-deploy-card">
                 <h2>Deployment Performance</h2>
                 <p>───── ⋆⋅☆⋅⋆ ─────</p>
@@ -114,34 +120,41 @@ function micro_deploy_generate_performance_page() {
                     <input hidden name="micro_deploy_reset_performance">
                     <button type="submit" class="micro-deploy-delete-button">Disable</button>
                 </form>
-<!--                <p>Number of static serving faults encountered:</p>-->
-<!--                <span class="micro-deploy-big-number">--><?php //_e(count($results)) ?><!--</span>-->
+                <?php
+                if($GLOBALS['micro_deploy_enabled_performance'] == true){
+                ?>
+                <form class="micro-deploy-form-marginated-top" action="" method="POST">
+                    <input hidden name="micro_deploy_reparse_performance">
+                    <button type="submit">Re-parse files</button>
+                </form>
+                    <?php
+                        }
+                    ?>
             </div>
-<!--            --><?php //if(count($results) !== 0){ ?>
-<!--            <div class="micro-deploy-admin-page-new-micro micro-deploy-card micro-deploy-max-height-card">-->
-<!--                <h2>Static Serving Faults URLs</h2>-->
-<!--                <p>───── ⋆⋅☆⋅⋆ ─────</p>-->
-<!--                <form action="" method="POST">-->
-<!--                    <input type="text" hidden name="micro_deploy_delete_all_errors">-->
-<!--                    <button type="submit">Delete all records</button>-->
-<!--                </form>-->
-<!--                <p>The following static assets requests encountered an error:</p>-->
-<!--                <ul>-->
-<!--                    --><?php
-//                    foreach($results as $result){
-//                        ?>
-<!--                        <li>--><?php //_e($result->path) ?>
-<!--                            <form action="" method="POST">-->
-<!--                                <input type="text" hidden name="micro_deploy_delete_error" value="--><?php //_e($result->id) ?><!--">-->
-<!--                                <button type="submit">Delete</button>-->
-<!--                            </form>-->
-<!--                        </li>-->
-<!--                        --><?php
-//                    }
-//                    }
-//                    ?>
-<!--                </ul>-->
-<!--            </div>-->
+        </section>
+        <section class="micro-deploy-admin-page-content marginated-bottom">
+            <?php
+            ?>
+            <?php if($GLOBALS['micro_deploy_enabled_performance'] == true){ ?>
+                <div class="micro-deploy-admin-page-new-micro micro-deploy-card">
+                    <h2>DCL</h2>
+                    <p>───── ⋆⋅☆⋅⋆ ─────</p>
+                    <p>123</p>
+                </div>
+                <div class="micro-deploy-admin-page-new-micro micro-deploy-card">
+                    <h2>FCP</h2>
+                    <p>───── ⋆⋅☆⋅⋆ ─────</p>
+                    <p>123</p>
+                </div>
+                <div class="micro-deploy-admin-page-new-micro micro-deploy-card">
+                    <h2>LCP</h2>
+                    <p>───── ⋆⋅☆⋅⋆ ─────</p>
+                    <p>123</p>
+                </div>
+                <?php
+            }
+            ?>
+
         </section>
     </div>
 <?php

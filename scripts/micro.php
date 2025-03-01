@@ -64,6 +64,10 @@ function add_micro() {
             link_micro($upload_directory, $micro_slug, $micro_name, $micro_tech, $micro_build);
 //            Change the URLS for static serving!
             micro_deploy_adjust_urls_static_serve($upload_directory, $micro_slug, $micro_tech, $micro_build);
+//            Check if the performance monitoring is on!
+            if($GLOBALS['micro_deploy_enabled_performance'] === true)
+                add_performance_client_data_to_micros();
+
             dispatch_success('Micro uploaded to server successfully');
         }
         else{
@@ -186,7 +190,7 @@ function micro_deploy_adjust_urls_static_serve($micro_upload_directory, $micro_s
                     $match = trim($matches[1] . '/' . $matches[2], "./");
                     $match = '/' . $match;
                     $new_url = micro_deploy_get_slug_url($match, $micro_slug . $extra_slug);
-                    error_log('ALOHAA HTML 0 ' . $matches[1]);
+//                    error_log('ALOHAA HTML 0 ' . $matches[1]);
                     return 'src=\'' . $new_url . '\'';
 
                 }, $contents);
