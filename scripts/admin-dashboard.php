@@ -77,11 +77,43 @@ function micro_deploy_generate_admin_page() {
                     <?php
                 }
                 foreach ($results as $micro) {
+                    if($GLOBALS['micro_deploy_enabled_performance'] === true) {
+                        $dcl = 0;
+                        $lcp = 0;
+                        $fcp = 0;
+
+                        $micro_table_name = $wpdb->prefix . 'microdeploy_performance';
+                        $results_performance = $wpdb->get_results("SELECT * FROM $micro_table_name WHERE slug = '$micro->slug'");
+                        if (count($results_performance)) {
+                            foreach ($results_performance as $result_performance) {
+                                $dcl += $result_performance->dcl;
+                                $fcp += $result_performance->fcp;
+                                $lcp += $result_performance->lcp;
+                            }
+                            $dcl /= count($results_performance);
+                            $fcp /= count($results_performance);
+                            $lcp /= count($results_performance);
+                        }
+                    }
                     ?>
                     <div class="micro-deploy-admin-micro micro-deploy-card">
                         <p>Name: <span class="micro_deploy_admin_micro_detail"><?php _e($micro->name) ?></span></p>
                         <p>Slug: <span class="micro_deploy_admin_micro_detail">/<?php _e($micro->slug) ?></span></p>
                         <p><?php _e($micro->created_at) ?></p>
+                        <?php
+                        if($GLOBALS['micro_deploy_enabled_performance'] === true){
+                        ?>
+                            <hr>
+<!--                        <p class="performance-header">Performance</p>-->
+                            <div class="micro-deploy-performance-micro-details">
+                                <p><b>DCL:</b> <?php _e($dcl) ?> </p>
+                                <p><b>FCP:</b> <?php _e($fcp) ?> </p>
+                                <p><b>LCP:</b> <?php _e($lcp) ?> </p>
+                            </div>
+                            <hr>
+                        <?php
+                            }
+                        ?>
                         <p><a href="/<?php _e($micro->slug) ?>">View micro</a></p>
                         <div class="micro-deploy-option-forms">
                             <form class="micro_deploy_admin_form" action="" method="POST">

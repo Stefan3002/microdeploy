@@ -185,11 +185,12 @@ add_action('template_redirect', function () {
 
     exit();
 });
-
+add_action('init', 'micro_deploy_load_settings');
 register_activation_hook(__FILE__, 'micro_deploy_initialize_db');
 
 
 function micro_deploy_initialize_db() {
+    micro_deploy_load_settings();
     global $wpdb;
 
     $table_name = $wpdb->prefix . 'microdeploy_micros';
@@ -261,14 +262,44 @@ function micro_deploy_initialize_db() {
         error_log('logs ' . print_r($logs, true));
     }
 
+//    Performance table
+    if($GLOBALS['micro_deploy_enabled_performance'] === true) {
+        $table_name = $wpdb->prefix . 'microdeploy_performance';
+        $charset_collate = $wpdb->get_charset_collate();
 
+        if (!($wpdb->get_var("SHOW TABLES LIKE '$table_name'") === $table_name)) {
+            $query = "
+      CREATE TABLE " . $table_name . "(
+          id mediumint(9) NOT NULL AUTO_INCREMENT,
+          slug varchar(255) NOT NULL,
+          dcl int(10) NOT NULL,
+          fcp int(10) NOT NULL,
+          lcp int(10) NOT NULL,
+          created_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          PRIMARY KEY  (id)
+      ); 
+    ";
 
+            require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
+
+            $logs = dbDelta($query);
+            error_log('logs ' . print_r($logs, true));
+        }
+    }
 }
-micro_deploy_initialize_db();
+//micro_deploy_initialize_db();
 
 
-add_action('init', 'micro_deploy_load_settings');
+add_action('init', function () {
+    add_action('rest_api_init', function () {
+        register_rest_route('performance-metrics/v1', "/set-data", array(
+            'methods' => "POST",
+            'callback' => 'set_data_rest'
+        ));
+    });
+});
 function micro_deploy_register_rest(){
+//    TODO: check to see if we need to register the rest routes for the state manager
     add_action('rest_api_init', function () {
         register_rest_route('micro-deploy/v1', "/set-data", array(
             'methods' => "POST",
@@ -282,6 +313,7 @@ function micro_deploy_register_rest(){
             'callback' => 'micro_deploy_get_data_rest'
         ));
     });
+
 }
 function micro_deploy_load_settings(){
     global $wpdb;
