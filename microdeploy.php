@@ -10,6 +10,7 @@ require_once(plugin_dir_path(__FILE__) . 'scripts/micro.php');
 require_once(plugin_dir_path(__FILE__) . 'scripts/state-manager.php');
 require_once(plugin_dir_path(__FILE__) . 'scripts/page-generators.php');
 require_once(plugin_dir_path(__FILE__) . 'scripts/performance.php');
+require_once(plugin_dir_path(__FILE__) . 'scripts/utils_security.php');
 
 // Hook to add a menu option in the WordPress admin
 add_action('admin_menu', function () {
@@ -265,7 +266,7 @@ function micro_deploy_initialize_db() {
 //    Performance table
     if($GLOBALS['micro_deploy_enabled_performance'] === true) {
         $table_name = $wpdb->prefix . 'microdeploy_performance';
-        $charset_collate = $wpdb->get_charset_collate();
+//        $charset_collate = $wpdb->get_charset_collate();
 
         if (!($wpdb->get_var("SHOW TABLES LIKE '$table_name'") === $table_name)) {
             $query = "
@@ -286,6 +287,27 @@ function micro_deploy_initialize_db() {
             error_log('logs ' . print_r($logs, true));
         }
     }
+
+//    Security table!
+    if($GLOBALS['micro_deploy_enabled_performance'] === true) {
+        $table_name = $wpdb->prefix . 'microdeploy_nonces';
+//        $charset_collate = $wpdb->get_charset_collate();
+
+        if (!($wpdb->get_var("SHOW TABLES LIKE '$table_name'") === $table_name)) {
+            $query = "
+      CREATE TABLE " . $table_name . "(
+          nonce varchar(255) NOT NULL,
+          created_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          PRIMARY KEY  (nonce)
+      ); 
+    ";
+
+            require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
+
+            $logs = dbDelta($query);
+            error_log('logs ' . print_r($logs, true));
+        }
+    }
 }
 //micro_deploy_initialize_db();
 
@@ -295,6 +317,12 @@ add_action('init', function () {
         register_rest_route('performance-metrics/v1', "/set-data", array(
             'methods' => "POST",
             'callback' => 'set_data_rest'
+        ));
+    });
+    add_action('rest_api_init', function () {
+        register_rest_route('security/v1', "/get-nonce", array(
+            'methods' => "GET",
+            'callback' => 'get_nonce_rest'
         ));
     });
 });

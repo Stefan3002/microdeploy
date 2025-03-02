@@ -84,20 +84,16 @@ function micro_deploy_traverse_array($array) {
         if ($type === "object") {
             if (!micro_deploy_sanitize_json($array_value))
                 return false;
-
         }
         else
             if($type === "array") {
                 if (!micro_deploy_traverse_array($array_value))
                     return false;
-
             }
             else
                 if($type === "boolean" || $type === "integer" || $type === "double" || $type === "string")
                     if(!micro_deploy_sanitize_atomic_data($array_value))
                         return false;
-
-
     }
     return true;
 }
@@ -158,20 +154,24 @@ function insert_db_wrapper($table_name, $data_value, $size, $global_name, $form_
         }
     }
 }
-function insert_db($table_name, $data) {
+function insert_db($table_name, $data, $with_update = true) {
     global $wpdb;
-
-    $data_name = $data['name'];
-    $data_value = $data['data_value'];
-    $value_name = $data['value_name'];
-    $already_results = $wpdb->get_results("SELECT * FROM $table_name WHERE $data_name = '$data_value'");
-    error_log(print_r($already_results, true));
-    if(count($already_results) > 0)
-        return $wpdb->update($table_name, array(
-            $value_name => $data['value_change']
-        ), array(
-            'id' => $already_results[0]->id
-        ));
+    if($with_update) {
+        $data_name = $data['name'];
+        $data_value = $data['data_value'];
+        $value_name = $data['value_name'];
+        $already_results = $wpdb->get_results("SELECT * FROM $table_name WHERE $data_name = '$data_value'");
+//    error_log(print_r($already_results, true));
+        if (count($already_results) > 0)
+            return $wpdb->update($table_name, array(
+                $value_name => $data['value_change']
+            ), array(
+                'id' => $already_results[0]->id
+            ));
+        else {
+            return $wpdb->insert($table_name, $data['new_record_value']);
+        }
+    }
     else {
         return $wpdb->insert($table_name, $data['new_record_value']);
     }

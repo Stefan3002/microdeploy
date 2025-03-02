@@ -20,16 +20,21 @@ function add_performance_client_data_to_micros(){
 
             $pattern = '/<head\b[^>]*>/';
 
-
-
             $measuring_script = '
             <script src="https://unpkg.com/web-vitals@3/dist/web-vitals.iife.js"></script>
             <script>
             (() => {
-	const sendData = () => {
+	const sendData = async () => {
     	// Only send the data when both FCP and LCP have been captured
     	if (fcp !== -1 && lcp !== -1 && dcl !== -1) {
+            
+            const dataNonce = await fetch("' . site_url() . '/wp-json/security/v1/get-nonce", {
+            	method: "GET",
+        	});
+        	const nonce = (await dataNonce.json()).data;
+            
         	const data = {
+                nonce,
                 slug: "' . $micro_slug . '",
             	dcl,
             	fcp,
@@ -97,11 +102,37 @@ function add_performance_client_data_to_micros(){
 
 function set_data_rest($request)
 {
-//    TODO: SANITIZE THE DATA!!!
+//TODO check if insert succeded
+    micro_deploy_origin_check();
+
     global $wpdb;
     $table_name = $wpdb->prefix . 'microdeploy_performance';
     $data = $request->get_json_params();
+
+    micro_deploy_check_nonce($data);
+
+    if(!micro_deploy_validate_input($data, [
+        "slug" => true,
+        "dcl" => true,
+        "fcp" => true,
+        "lcp" => true
+    ], [
+        "slug" => "string",
+        "dcl" => "integer",
+        "fcp" => "integer",
+        "lcp" => "integer"
+    ]))
+        return;
     error_log(print_r($data, true));
-    $wpdb->insert($table_name, $data);
+    $db_data = [
+        'slug' => $data['slug'],
+        'dcl' => $data['dcl'],
+        'fcp' => $data['fcp'],
+        'lcp' => $data['lcp']
+    ];
+    $wpdb->insert($table_name, $db_data);
+
+    micro_deploy_consume_nonce($data['nonce']);
+
     return new WP_REST_Response('ok', 200);
 }

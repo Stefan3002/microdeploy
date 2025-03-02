@@ -90,9 +90,9 @@ function micro_deploy_generate_admin_page() {
                                 $fcp += $result_performance->fcp;
                                 $lcp += $result_performance->lcp;
                             }
-                            $dcl /= count($results_performance);
-                            $fcp /= count($results_performance);
-                            $lcp /= count($results_performance);
+                            $dcl = round($dcl / count($results_performance));
+                            $fcp = round($fcp / count($results_performance));
+                            $lcp = round($lcp / count($results_performance));
                         }
                     }
                     ?>
@@ -101,7 +101,7 @@ function micro_deploy_generate_admin_page() {
                         <p>Slug: <span class="micro_deploy_admin_micro_detail">/<?php _e($micro->slug) ?></span></p>
                         <p><?php _e($micro->created_at) ?></p>
                         <?php
-                        if($GLOBALS['micro_deploy_enabled_performance'] === true){
+                            if($GLOBALS['micro_deploy_enabled_performance'] === true){
                         ?>
                             <hr>
 <!--                        <p class="performance-header">Performance</p>-->
