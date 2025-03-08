@@ -11,7 +11,11 @@ function micro_deploy_generate_admin_page() {
     global $wpdb;
 
     $micro_table_name = $wpdb->prefix . 'microdeploy_micros';
-    $results = $wpdb->get_results("SELECT * FROM $micro_table_name");
+
+    if(!micro_deploy_check_db_table($micro_table_name))
+        $results = [];
+    else
+        $results = $wpdb->get_results("SELECT * FROM $micro_table_name");
 
     $plugin_data = get_plugin_data(__FILE__);
 //    echo json_encode($plugin_data);
@@ -25,13 +29,39 @@ function micro_deploy_generate_admin_page() {
         </div>
         <div class="micro-deploy-admin-page-content">
             <div class="micro-deploy-admin-page-new-micro micro-deploy-card">
-                <h2>Add a new micro frontend.</h2>
+                <h2>Add a new <strong><em>vertical</em></strong> micro-frontend.</h2>
                 <p>───── ⋆⋅☆⋅⋆ ─────</p>
-                <p>Note: Only upload the build folder of your micro frontend.</p>
+                <p>Note: Only upload the build folder of your micro-frontend.</p>
                 <form action="" method="post" enctype="multipart/form-data">
                     <input type="file" accept="application/zip" required name="micro-deploy-add-new-micro-file">
+                    <input type="text" hidden="true" name="micro-deploy-add-new-micro-file-vertical">
                     <input type="text" required placeholder="Name of micro" name="micro-deploy-add-new-micro-name">
                     <input type="text" required placeholder="Slug of micro" name="micro-deploy-add-new-micro-slug">
+                    <label for="">Technology of micro frontend</label>
+                    <select type="text" required placeholder="Technology" name="micro-deploy-add-new-micro-tech">
+                        <option value="react">React</option>
+                        <option value="angular">Angular</option>
+                        <option value="vue">Vue</option>
+                        <option value="vanilla">Vanilla</option>
+                    </select>
+                    <label for="">Build tool of micro frontend</label>
+                    <select type="text" required placeholder="Build tool" name="micro-deploy-add-new-micro-build">
+                        <option value="cra">CRA</option>
+                        <option value="vite">Vite</option>
+                        <option value="none">None</option>
+                    </select>
+                    <button type="submit">Add micro</button>
+                </form>
+            </div>
+            <div class="micro-deploy-admin-page-new-micro micro-deploy-card">
+                <h2>Add a new <strong><em>horizontal</em></strong> micro-frontend.</h2>
+                <p>───── ⋆⋅☆⋅⋆ ─────</p>
+                <p>Note: Only upload the build folder of your micro-frontend.</p>
+                <form action="" method="post" enctype="multipart/form-data">
+                    <input type="file" accept="application/zip" required name="micro-deploy-add-new-micro-file">
+                    <input type="text" hidden="true" name="micro-deploy-add-new-micro-file-horizontal">
+                    <input type="text" required placeholder="Name of micro" name="micro-deploy-add-new-micro-name">
+                    <input type="text" required placeholder="Shortcode" name="micro-deploy-add-new-micro-slug">
                     <label for="">Technology of micro frontend</label>
                     <select type="text" required placeholder="Technology" name="micro-deploy-add-new-micro-tech">
                         <option value="react">React</option>
@@ -97,11 +127,13 @@ function micro_deploy_generate_admin_page() {
                     }
                     ?>
                     <div class="micro-deploy-admin-micro micro-deploy-card">
-                        <p>Name: <span class="micro_deploy_admin_micro_detail"><?php _e($micro->name) ?></span></p>
+                        <p class="micro-type micro_deploy_admin_micro_detail"><?php _e($micro->name) ?></p>
+                        <hr>
+                        <p><b><?php _e(ucfirst($micro->type)) ?></b> micro</p>
                         <p>Slug: <span class="micro_deploy_admin_micro_detail">/<?php _e($micro->slug) ?></span></p>
                         <p><?php _e($micro->created_at) ?></p>
                         <?php
-                            if($GLOBALS['micro_deploy_enabled_performance'] === true){
+                            if($GLOBALS['micro_deploy_enabled_performance'] === true && $micro->type === 'vertical'){
                         ?>
                             <hr>
 <!--                        <p class="performance-header">Performance</p>-->
@@ -113,8 +145,12 @@ function micro_deploy_generate_admin_page() {
                             <hr>
                         <?php
                             }
+                            if($micro->type === 'vertical'){
                         ?>
                         <p><a href="/<?php _e($micro->slug) ?>">View micro</a></p>
+                                <?php
+                            }
+                                ?>
                         <div class="micro-deploy-option-forms">
                             <form class="micro_deploy_admin_form" action="" method="POST">
                                 <input type="text" hidden name="delete-micro" value="<?php _e($micro->id) ?>">
@@ -139,12 +175,15 @@ function micro_deploy_generate_admin_page() {
     <?php
     $wpdb->query('START TRANSACTION');
     try {
+//        TODO: fix deletion!
         if (isset($_POST['delete-micro'])) {
+            error_log(intval($_POST['delete-micro']));
             $result = $wpdb->delete($micro_table_name,
                 array(
-                    'id' => $_POST['delete-micro']
+                    'id' => intval($_POST['delete-micro'])
                 )
             );
+            error_log($wpdb->last_error);
             if (!$result) {
                 error_log('Could not delete micro.');
                 dispatch_error('Could not delete micro.');
@@ -209,7 +248,11 @@ function micro_deploy_generate_admin_page() {
             dispatch_error("Slug of the micro is too short");
             return;
         }
-        add_micro();
+        if(isset($_POST['micro-deploy-add-new-micro-file-vertical']))
+            add_micro('vertical');
+        if(isset($_POST['micro-deploy-add-new-micro-file-horizontal']))
+            add_micro('horizontal');
     }
+
 
 }

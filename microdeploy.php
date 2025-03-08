@@ -43,11 +43,14 @@ function micro_deploy_enqueue_admin_styles() {
 add_action('init', function () {
     global $wpdb;
     $micro_table_name = $wpdb->prefix . 'microdeploy_micros';
-    $results = $wpdb->get_results("SELECT slug FROM $micro_table_name");
+    $results = $wpdb->get_results("SELECT slug, type FROM $micro_table_name");
 
 
-
+    error_log(print_r($results, true));
     foreach ($results as $micro_name){
+//        Skip if horizontal!
+        if($micro_name->type === 'horizontal')
+            continue;
         add_rewrite_rule(
             '^' . $micro_name->slug . '/?$',
             'index.php?micro=' . $micro_name->slug,
@@ -197,7 +200,7 @@ function micro_deploy_initialize_db() {
     $table_name = $wpdb->prefix . 'microdeploy_micros';
     $charset_collate = $wpdb->get_charset_collate();
 
-    if(!($wpdb->get_var("SHOW TABLES LIKE '$table_name'") === $table_name)) {
+    if(!micro_deploy_check_db_table($table_name)) {
 
         $query = "
       CREATE TABLE " . $table_name . "(
@@ -207,6 +210,7 @@ function micro_deploy_initialize_db() {
           tech varchar(255) NOT NULL,
           build varchar(255) NOT NULL,
           path varchar(255) NOT NULL,
+          type varchar(50) NOT NULL DEFAULT 'vertical',
           created_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
           PRIMARY KEY  (id)
       ); 
@@ -311,6 +315,7 @@ function micro_deploy_initialize_db() {
 }
 //micro_deploy_initialize_db();
 
+add_action('init', 'link_micro_shortcodes');
 
 add_action('init', function () {
     add_action('rest_api_init', function () {
@@ -351,6 +356,7 @@ function micro_deploy_load_settings(){
     $max_upload_found = false;
     $max_backtrack_found = false;
     $enabled_performance_found = false;
+    $performance_limit_found = false;
     if(count($results) === 0)
         return;
 
@@ -362,6 +368,10 @@ function micro_deploy_load_settings(){
         if($result->name === 'max_upload') {
             $max_upload_found = true;
             $GLOBALS['micro_deploy_max_upload'] = $result->value;
+        }
+        if($result->name === 'performance_limit') {
+            $performance_limit_found = true;
+            $GLOBALS['micro_deploy_performance_limit'] = $result->value;
         }
         if($result->name === 'max_backtrack') {
             $max_backtrack_found = true;
@@ -379,6 +389,8 @@ function micro_deploy_load_settings(){
         $GLOBALS['micro_deploy_max_upload'] = 10000000;
     if(!$max_backtrack_found)
         $GLOBALS['micro_deploy_max_backtrack'] = 100000;
+    if(!$performance_limit_found)
+        $GLOBALS['micro_deploy_performance_limit'] = 100;
     if(!$enabled_performance_found)
         $GLOBALS['micro_deploy_enabled_performance'] = false;
 }

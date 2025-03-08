@@ -8,6 +8,9 @@ function add_performance_client_data_to_micros(){
 
 
         foreach ($micros as $micro) {
+//            If Horizontal, skip, you can't measure performance here, I think!
+            if($micro->type === 'horizontal')
+                continue;
             $micro_path = $micro->path;
             $micro_slug = $micro->slug;
             $index_path = micro_deploy_search_index_html($micro_path);
@@ -130,7 +133,18 @@ function set_data_rest($request)
         'fcp' => $data['fcp'],
         'lcp' => $data['lcp']
     ];
+    $slug = $data['slug'];
+    $performance_limit = $GLOBALS['micro_deploy_performance_limit'];
+//    Only keep the latest values!
     $wpdb->insert($table_name, $db_data);
+    $wpdb->query("
+    DELETE FROM $table_name 
+    WHERE id NOT IN (
+        SELECT id FROM (
+            SELECT id FROM $table_name WHERE slug='$slug' ORDER BY created_at DESC LIMIT $performance_limit
+        ) AS t
+    ) AND slug='$slug'
+");
 
     micro_deploy_consume_nonce($data['nonce']);
 

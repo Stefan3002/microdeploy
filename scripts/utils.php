@@ -178,11 +178,11 @@ function insert_db($table_name, $data, $with_update = true) {
 }
 
 function micro_deploy_search_index_html($folder_path){
-//    error_log("Searching for index.html in " . $folder_path);
+    error_log("Searching for index.html in " . $folder_path);
     $files = glob($folder_path . DIRECTORY_SEPARATOR . "*");
 
     foreach($files as $file){
-//        error_log("Checking " . basename($file));
+        error_log("Checking " . basename($file));
         if(is_dir($file)) {
             $checked_file = micro_deploy_search_index_html($file);
             if(basename($checked_file) === 'index.html')
@@ -207,4 +207,8 @@ function micro_deploy_handle_regex_errors($error_code, $updated_contents, $conte
         return $contents;
     else
         return $updated_contents;
+}
+function micro_deploy_check_db_table($table_name){
+    global $wpdb;
+    return $wpdb->get_var("SHOW TABLES LIKE '$table_name'") === $table_name;
 }

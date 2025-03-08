@@ -1,7 +1,7 @@
 <?php
 require_once plugin_dir_path(__FILE__) . 'utils.php';
 
-function add_micro() {
+function add_micro($type='vertical') {
 
     $micro_name = $_POST['micro-deploy-add-new-micro-name'];
     $micro_slug = $_POST['micro-deploy-add-new-micro-slug'];
@@ -44,9 +44,8 @@ function add_micro() {
         return;
     }
 
-//TODO: CHANGE THE TRIPLE SEVEN!
     if(!is_dir($upload_directory))
-        if(mkdir($upload_directory, 0777, true)){
+        if(mkdir($upload_directory, 0755, true)){
 
         }
         else{
@@ -60,13 +59,19 @@ function add_micro() {
             $zip->extractTo($upload_directory);
             $zip->close();
             unlink($upload_directory_file);
+
 //            Add the rewrite rules
-            link_micro($upload_directory, $micro_slug, $micro_name, $micro_tech, $micro_build);
+                link_micro($upload_directory, $micro_slug, $micro_name, $micro_tech, $micro_build, $type);
+            if($type === 'vertical') {
 //            Change the URLS for static serving!
-            micro_deploy_adjust_urls_static_serve($upload_directory, $micro_slug, $micro_tech, $micro_build);
+                micro_deploy_adjust_urls_static_serve($upload_directory, $micro_slug, $micro_tech, $micro_build);
 //            Check if the performance monitoring is on!
-            if($GLOBALS['micro_deploy_enabled_performance'] === true)
-                add_performance_client_data_to_micros();
+                if ($GLOBALS['micro_deploy_enabled_performance'] === true)
+                    add_performance_client_data_to_micros();
+            }
+            else{
+                link_micro_shortcode($micro_slug, $upload_directory);
+            }
 
             dispatch_success('Micro uploaded to server successfully');
         }
@@ -82,7 +87,7 @@ function add_micro() {
     }
 }
 
-function link_micro($upload_directory_file, $micro_slug, $micro_name, $micro_tech, $micro_build) {
+function link_micro($upload_directory_file, $micro_slug, $micro_name, $micro_tech, $micro_build, $type='vertical') {
     global $wpdb;
 
     $micro_table_name = $wpdb->prefix . 'microdeploy_micros';
@@ -93,6 +98,7 @@ function link_micro($upload_directory_file, $micro_slug, $micro_name, $micro_tec
         'tech' => sanitize_text_field($micro_tech),
         'build' => sanitize_text_field($micro_build),
         'path' => sanitize_text_field($upload_directory_file),
+        'type' => sanitize_text_field($type)
     );
 
     if(!$wpdb->insert($micro_table_name, $data)){
@@ -100,19 +106,22 @@ function link_micro($upload_directory_file, $micro_slug, $micro_name, $micro_tec
         dispatch_error('Could not insert data into the table');
         return;
     }
+    if($type === 'horizontal')
+        return;
 //    TODO: Does this make sense anymore?
-    add_rewrite_rule(
-        '^' . $micro_slug . '/?$',
-        'index.php?micro=landing-page',
-        'top'
-    );
+        add_rewrite_rule(
+            '^' . $micro_slug . '/?$',
+            'index.php?micro=landing-page',
+            'top'
+        );
 //    for static files
-    add_rewrite_rule(
-        '^' . $micro_slug . '/(.+)',
-        'index.php?micro=' . $micro_slug . '&static_file=$matches[1]',
-        'top'
-    );
-    flush_rewrite_rules();
+        add_rewrite_rule(
+            '^' . $micro_slug . '/(.+)',
+            'index.php?micro=' . $micro_slug . '&static_file=$matches[1]',
+            'top'
+        );
+        flush_rewrite_rules();
+
 }
 
 function micro_deploy_get_slug_url($relative_path, $micro_slug, $root = true){
@@ -245,4 +254,54 @@ function micro_deploy_adjust_urls_static_serve($micro_upload_directory, $micro_s
         }
     }
     dispatch_success("Successfully modified the links.");
+}
+
+function link_micro_shortcodes() {
+//    Take the shortcodes from the DB
+    global $wpdb;
+    $table_name = $wpdb->prefix . 'microdeploy_micros';
+    $micros = $wpdb->get_results("SELECT * FROM $table_name WHERE type='horizontal'");
+    if(count($micros) === 0)
+        return;
+    foreach($micros as $micro){
+        link_micro_shortcode($micro->slug, $micro->path);
+    }
+}
+function link_micro_shortcode($micro_shortcode, $micro_path){
+    add_shortcode($micro_shortcode, function () use ($micro_shortcode, $micro_path) {return inject_micro_shortcode($micro_shortcode, $micro_path);});
+}
+
+function inject_micro_shortcode($micro_slug, $micro_path){
+    $index_path = micro_deploy_search_index_html($micro_path);
+    error_log('INJECTING MICRO ' . $index_path);
+
+    $contents = file_get_contents($index_path);
+    error_log('INJECTING MICRO ' . $contents);
+
+    $target_pattern_start = '<!-- START MICRODEPLOY HORIZONTAL SPLIT -->';
+    $target_pattern_end = '<!-- END MICRODEPLOY HORIZONTAL SPLIT -->';
+
+    $pattern_already_exists = '/<!-- START MICRODEPLOY HORIZONTAL SPLIT -->([\s\S]*?)<!-- END MICRODEPLOY HORIZONTAL SPLIT -->/';
+
+    if (!preg_match_all($pattern_already_exists, $contents, $matches)) {
+//        dispatch_error("The micro did not contain the delimiting markers!");
+        return 'No markers found';
+    }
+
+    $output = '';
+    foreach($matches[0] as $match)
+        $output .= $match;
+
+    return $output;
+
+//    $updated_contents = preg_replace_callback($pattern, function ($matches) use ($target_pattern_start, $target_pattern_end, $measuring_script) {
+//        $match = $matches[0];
+////                error_log('ALOHAA ' . $match);
+//        return $match . $target_pattern_start . $measuring_script . $target_pattern_end;
+//    }, $contents);
+//    $updated_contents = micro_deploy_handle_regex_errors(preg_last_error(), $updated_contents, $contents);
+//    file_put_contents($index_path, $updated_contents);
+
+
+    return $file;
 }

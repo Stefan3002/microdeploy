@@ -36,6 +36,26 @@ function micro_deploy_generate_settings_page(){
                 <button type="submit" class="micro-deploy-delete-button">Reset</button>
             </form>
         </div>
+        <?php
+            if($GLOBALS['micro_deploy_enabled_performance'] === true) {
+        ?>
+        <div class="micro-deploy-admin-page-new-micro micro-deploy-card">
+            <h2>Max performance entries</h2>
+            <p>───── ⋆⋅☆⋅⋆ ─────</p>
+            <form action="" method="post">
+                <label for="micro-deploy-settings-max-backtrack">Number of stored records of performance per micro</label>
+                <p>Default: 100 entries</p>
+                <input type="text" id="micro-deploy-settings-max-backtrack" required value="<?php _e($GLOBALS['micro_deploy_performance_limit']) ?> " placeholder="Max performance records" name="micro-deploy-settings-max-performance-limit">
+                <button type="submit">Save</button>
+            </form>
+            <form class="micro-deploy-form-marginated-top" action="" method="POST">
+                <input hidden name="micro-deploy-settings-reset-max-performance-limit">
+                <button type="submit" class="micro-deploy-delete-button">Reset</button>
+            </form>
+        </div>
+                <?php
+            }
+                ?>
     </div>
 </div>
 <?php
@@ -44,6 +64,7 @@ function micro_deploy_generate_settings_page(){
     $micro_table_name = $wpdb->prefix . $table_name;
     insert_db_wrapper($table_name, 'max_upload', 10000000, 'micro_deploy_max_upload', 'micro-deploy-settings-reset-max-upload');
     insert_db_wrapper($table_name, 'max_backtrack', 100000, 'micro_deploy_max_backtrack', 'micro-deploy-settings-reset-max-backtrack');
+    insert_db_wrapper($table_name, 'performance_limit', 100, 'micro_deploy_performance_limit', 'micro-deploy-settings-reset-max-performance-limit');
 
     $data_value = null;
     $size = null;
@@ -59,6 +80,11 @@ function micro_deploy_generate_settings_page(){
         $data_value = 'max_backtrack';
         $size = $_POST['micro-deploy-settings-max-backtrack'];
         $global_name = 'micro_deploy_max_backtrack';
+    }
+    if(isset($_POST['micro-deploy-settings-max-performance-limit'])) {
+        $data_value = 'performance_limit';
+        $size = $_POST['micro-deploy-settings-max-performance-limit'];
+        $global_name = 'micro_deploy_max_performance_limit';
     }
 
 
@@ -136,21 +162,21 @@ function micro_deploy_generate_performance_page() {
             <?php
             ?>
             <?php if($GLOBALS['micro_deploy_enabled_performance'] == true){ ?>
-                <div class="micro-deploy-admin-page-new-micro micro-deploy-card">
+                <section class="micro-deploy-admin-page-new-micro micro-deploy-card">
                     <h2>DCL</h2>
                     <p>───── ⋆⋅☆⋅⋆ ─────</p>
                     <p>123</p>
-                </div>
-                <div class="micro-deploy-admin-page-new-micro micro-deploy-card">
+                </section>
+                <section class="micro-deploy-admin-page-new-micro micro-deploy-card">
                     <h2>FCP</h2>
                     <p>───── ⋆⋅☆⋅⋆ ─────</p>
                     <p>123</p>
-                </div>
-                <div class="micro-deploy-admin-page-new-micro micro-deploy-card">
+                </section>
+                <section class="micro-deploy-admin-page-new-micro micro-deploy-card">
                     <h2>LCP</h2>
                     <p>───── ⋆⋅☆⋅⋆ ─────</p>
                     <p>123</p>
-                </div>
+                </section>
                 <?php
             }
             ?>
