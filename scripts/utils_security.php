@@ -63,3 +63,22 @@ function micro_deploy_consume_nonce($nonce){
     $table_name = $wpdb->prefix . 'microdeploy_nonces';
     $wpdb->delete($table_name, ['nonce' => $nonce]);
 }
+
+function micro_deploy_check_hash($received_hash, $data){
+    unset($data['hash']);
+    $computed_hash = micro_deploy_compute_hash($data);
+    error_log('COMPUTED HASH: ' . $computed_hash);
+    if($received_hash !== $computed_hash){
+        status_header(401);
+        exit('Invalid hash!');
+    }
+}
+
+function micro_deploy_compute_hash($data){
+    $nonce = $data['nonce'];
+    $date = $data['date'];
+    $secret = $nonce . $date;
+
+    $hash = hash_hmac('sha256', json_encode($data), $secret);
+    return $hash;
+}

@@ -258,7 +258,27 @@ function micro_deploy_generate_about_page() {
             <h2 class="micro_deploy_title">Micro Deploy</h2>
             <p>by Ștefan Secrieru</p>
         </div>
+        <div class="centered-title">
+            <div class="work-card micro-deploy-admin-page-new-micro micro-deploy-card micro-deploy-small-card">
+                <div class="centered-title">
+                    <h2>How Does it Work?</h2>
+                    <p>───── ⋆⋅☆⋅⋆ ─────</p>
+                </div>
+                <ul>
+                    <li><strong>For Vertical Splits:</strong> Upload an archive that has a build/dist folder inside.</li>
+                    <li><strong>For Horizontal Splits:</strong> Upload an archive that has a build/dist folder inside and inside that folder there are 3 files: a .css, .jd, index.html file. Inside the index.html file, there must be at least one section delimited by the following comments:
+
+                        <p>START MICRODEPLOY HORIZONTAL SPLIT</p>
+                        <p>END MICRODEPLOY HORIZONTAL SPLIT</p>
+                        All HTML code between these two comments will be considered a micro-frontend. If there are multiple such sections, they will all be aggregated into one.
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+
         <div class="micro-deploy-admin-page-content micro-deploy-settings-page-content">
+
             <div class="micro-deploy-admin-page-new-micro micro-deploy-card micro-deploy-small-card">
                 <div class="centered-title">
                     <h2>About Functionalities</h2>

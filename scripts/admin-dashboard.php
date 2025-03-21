@@ -56,7 +56,7 @@ function micro_deploy_generate_admin_page() {
             <div class="micro-deploy-admin-page-new-micro micro-deploy-card">
                 <h2>Add a new <strong><em>horizontal</em></strong> micro-frontend.</h2>
                 <p>───── ⋆⋅☆⋅⋆ ─────</p>
-                <p>Note: Only upload the build folder of your micro-frontend.</p>
+                <p>Note: Upload the JS, CSS and an index.html files. The HTML file must have the delimiting comments around the horizontal micro-frontend.</p>
                 <form action="" method="post" enctype="multipart/form-data">
                     <input type="file" accept="application/zip" required name="micro-deploy-add-new-micro-file">
                     <input type="text" hidden="true" name="micro-deploy-add-new-micro-file-horizontal">

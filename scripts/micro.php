@@ -59,8 +59,14 @@ function add_micro($type='vertical') {
             $zip->extractTo($upload_directory);
             $zip->close();
             unlink($upload_directory_file);
-
-//            Add the rewrite rules
+//            Check for the requested 3 files!
+            if($type === 'horizontal')
+                if(!check_horizontal_files($upload_directory)){
+                    dispatch_error('The horizontal micro does not contain the necessary files!');
+                    remove_dir($upload_directory);
+                    return;
+                }
+//            Add the rewrite rules and DB entries
                 link_micro($upload_directory, $micro_slug, $micro_name, $micro_tech, $micro_build, $type);
             if($type === 'vertical') {
 //            Change the URLS for static serving!
@@ -70,6 +76,8 @@ function add_micro($type='vertical') {
                     add_performance_client_data_to_micros();
             }
             else{
+//                micro_deploy_adjust_urls_static_serve($upload_directory, $micro_slug, $micro_tech, $micro_build);
+
                 link_micro_shortcode($micro_slug, $upload_directory);
             }
 
@@ -273,6 +281,11 @@ function link_micro_shortcode($micro_shortcode, $micro_path){
 
 function inject_micro_shortcode($micro_slug, $micro_path){
     $index_path = micro_deploy_search_index_html($micro_path);
+    $css_path = micro_deploy_search_by_extension($micro_path, 'css');
+    $js_path = micro_deploy_search_by_extension($micro_path, 'js');
+
+
+
     error_log('INJECTING MICRO ' . $index_path);
 
     $contents = file_get_contents($index_path);
@@ -292,16 +305,17 @@ function inject_micro_shortcode($micro_slug, $micro_path){
     foreach($matches[0] as $match)
         $output .= $match;
 
+    $plugin_name = 'microdeploy';
+    $segments = explode($plugin_name, plugin_dir_url(__FILE__));
+    $local_segments = explode($micro_slug, $css_path);
+    $local_segments_js = explode($micro_slug, $js_path);
+    $css_path_url = $segments[0] . $plugin_name . DIRECTORY_SEPARATOR . 'micros' . DIRECTORY_SEPARATOR . $micro_slug . $local_segments[1];
+    $js_path_url = $segments[0] . $plugin_name . DIRECTORY_SEPARATOR . 'micros' . DIRECTORY_SEPARATOR . $micro_slug . $local_segments_js[1];
+//    Add CSS and JS files
+//    error_log('CSS PATH ' . $p);
+//    error_log('CSS PATH ' . $css_path);
+    wp_enqueue_style('micro-deploy-shortcode-style-' . $micro_slug, $css_path_url);
+    wp_enqueue_script('my-custom-script-' . $micro_slug, $js_path_url, array('jquery'), '1.0.0', true);
+
     return $output;
-
-//    $updated_contents = preg_replace_callback($pattern, function ($matches) use ($target_pattern_start, $target_pattern_end, $measuring_script) {
-//        $match = $matches[0];
-////                error_log('ALOHAA ' . $match);
-//        return $match . $target_pattern_start . $measuring_script . $target_pattern_end;
-//    }, $contents);
-//    $updated_contents = micro_deploy_handle_regex_errors(preg_last_error(), $updated_contents, $contents);
-//    file_put_contents($index_path, $updated_contents);
-
-
-    return $file;
 }

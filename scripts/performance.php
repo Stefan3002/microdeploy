@@ -27,6 +27,37 @@ function add_performance_client_data_to_micros(){
             <script src="https://unpkg.com/web-vitals@3/dist/web-vitals.iife.js"></script>
             <script>
             (() => {
+                const createHmac = async (message, secret) => {
+    const encoder = new TextEncoder()
+
+    const key = await crypto.subtle.importKey(
+        "raw",
+        encoder.encode(secret),
+        {
+            name: "HMAC",
+            hash: {
+                name: "SHA-256"
+            }
+        },
+        false,
+        ["sign"]
+    )
+
+    const signature = await crypto.subtle.sign(
+        "HMAC",
+        key,
+        encoder.encode(JSON.stringify(message))
+    )
+    let aux = ""
+    const intBytes = new Uint8Array(signature)
+    intBytes.forEach((byte) => {
+        byte = byte.toString(16).padStart(2, "0")
+        aux += byte
+    })
+    return aux
+}
+                
+                
 	const sendData = async () => {
     	// Only send the data when both FCP and LCP have been captured
     	if (fcp !== -1 && lcp !== -1 && dcl !== -1) {
@@ -35,14 +66,28 @@ function add_performance_client_data_to_micros(){
             	method: "GET",
         	});
         	const nonce = (await dataNonce.json()).data;
+            const date = Date.now()
+            const secret = nonce + date
             
-        	const data = {
+        	let data = {
                 nonce,
                 slug: "' . $micro_slug . '",
             	dcl,
             	fcp,
-            	lcp
+            	lcp,
+            	date
         	};
+            const hash = await createHmac(data, secret)
+            data = {
+                nonce,
+                slug: "' . $micro_slug . '",
+            	dcl,
+            	fcp,
+            	lcp,
+            	date,
+            	hash
+        	};
+            
     	fetch("' . site_url() . '/wp-json/performance-metrics/v1/set-data", {
             	method: "POST",
             	headers: {
@@ -126,6 +171,9 @@ function set_data_rest($request)
         "lcp" => "integer"
     ]))
         return;
+
+    micro_deploy_check_hash($data['hash'], $data);
+
     error_log(print_r($data, true));
     $db_data = [
         'slug' => $data['slug'],

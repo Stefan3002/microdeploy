@@ -178,7 +178,7 @@ function insert_db($table_name, $data, $with_update = true) {
 }
 
 function micro_deploy_search_index_html($folder_path){
-    error_log("Searching for index.html in " . $folder_path);
+//    error_log("Searching for index.html in " . $folder_path);
     $files = glob($folder_path . DIRECTORY_SEPARATOR . "*");
 
     foreach($files as $file){
@@ -197,6 +197,33 @@ function micro_deploy_search_index_html($folder_path){
     return false;
 }
 
+function micro_deploy_search_by_extension($folder_path, $extension_target){
+//    error_log("Searching for index.html in " . $folder_path);
+    $files = glob($folder_path . DIRECTORY_SEPARATOR . "*");
+
+    foreach($files as $file){
+//        error_log("Checking " . basename($file));
+        if(is_dir($file)) {
+            $checked_file = micro_deploy_search_by_extension($file, $extension_target);
+            $basename = basename($checked_file);
+            $extension = pathinfo($basename, PATHINFO_EXTENSION);
+            if($extension === $extension_target)
+                return $checked_file;
+        }
+        else {
+            $basename = basename($file);
+            $extension = pathinfo($basename, PATHINFO_EXTENSION);
+            if ($extension === $extension_target) {
+//                error_log("Found index.html in " . $file);
+                return $file;
+            }
+        }
+    }
+    return false;
+}
+
+
+
 function micro_deploy_handle_regex_errors($error_code, $updated_contents, $contents){
     if($error_code === 2)
         dispatch_error("Maximum backtrack limit reached when parsing.");
@@ -211,4 +238,23 @@ function micro_deploy_handle_regex_errors($error_code, $updated_contents, $conte
 function micro_deploy_check_db_table($table_name){
     global $wpdb;
     return $wpdb->get_var("SHOW TABLES LIKE '$table_name'") === $table_name;
+}
+
+function check_horizontal_files($folder_path) {
+    $html_found = False;
+    $css_found = False;
+    $js_found = False;
+    $files = glob($folder_path . DIRECTORY_SEPARATOR . "*");
+    foreach ($files as $file) {
+        $file_name = basename($file);
+        $extension = pathinfo($file, PATHINFO_EXTENSION);
+
+        if($extension === 'html')
+            $html_found = True;
+        elseif($extension === 'css')
+            $css_found = True;
+        elseif($extension === 'js')
+            $js_found = True;
+    }
+    return $html_found && $css_found && $js_found;
 }
