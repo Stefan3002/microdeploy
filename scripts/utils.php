@@ -1,11 +1,25 @@
 <?php
 function remove_dir($dir) {
-    if(rmdir($dir)){
+    try {
+        if(!is_dir($dir))
+            throw new Exception("$dir is not a directory");
 
+        // Careful for directories that are not empty! It will crash for horizontal split if there are no 3 files required!
+        if(count(scandir($dir)) === 2) {
+            if (rmdir($dir)) {
+
+            } else
+                throw new Exception("Could not remove the micro folder that was created but an error was encountered while trying to move the files there");
+        }
+        else
+            micro_deploy_remove_full_folder($dir);
+    }catch (Exception $e){
+        error_log($e);
+        dispatch_error("Could not remove the micro folder.");
+        return;
     }
-    else
-        dispatch_error("Could not remove the micro folder that was created but an error was encountered while trying to move the files there");
-    return;
+
+
 }
 
 function micro_deploy_remove_folder($target_dir){
@@ -241,6 +255,12 @@ function micro_deploy_check_db_table($table_name){
 }
 
 function check_horizontal_files($folder_path) {
+    error_log(count(scandir($folder_path)));
+    if(count(scandir($folder_path)) !== 5) {
+        dispatch_error("The micro folder does not contain the required number of files.");
+        return false;
+    }
+
     $html_found = False;
     $css_found = False;
     $js_found = False;
@@ -257,4 +277,45 @@ function check_horizontal_files($folder_path) {
             $js_found = True;
     }
     return $html_found && $css_found && $js_found;
+}
+
+function micro_deploy_minify_horizontal_split($micro_slug, $upload_directory) {
+    try {
+//    $html_file = micro_deploy_search_by_extension($upload_directory, 'html');
+        $css_file = micro_deploy_search_by_extension($upload_directory, 'css');
+        $js_file = micro_deploy_search_by_extension($upload_directory, 'js');
+        error_log($css_file);
+//    Get the minifier
+        $css_minifier = new MatthiasMullie\Minify\CSS($css_file);
+        $js_minifier = new MatthiasMullie\Minify\JS($js_file);
+
+        $css_segments = explode($micro_slug, $css_file);
+
+        $css_minified_path = $css_segments[0] . $micro_slug . DIRECTORY_SEPARATOR . 'prod.min.css';
+        $js_minified_path = $css_segments[0] . $micro_slug . DIRECTORY_SEPARATOR . 'prod.min.js';
+
+        $css_minifier->minify($css_minified_path);
+        $js_minifier->minify($js_minified_path);
+    }
+    catch (Exception $e){
+        error_log($e);
+        dispatch_error("Could not minify the files.");
+    }
+
+}
+
+function micro_deploy_remove_full_folder($dir){
+    try {
+        $files = glob($dir . DIRECTORY_SEPARATOR . "*");
+
+        foreach($files as $file)
+            if(is_dir($file))
+                micro_deploy_remove_full_folder($file);
+            elseif (is_file($file))
+                unlink($file);
+        rmdir($dir);
+    }catch (Exception $e){
+        error_log($e);
+        dispatch_error("Could not remove the full micro folder.");
+    }
 }

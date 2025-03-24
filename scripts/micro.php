@@ -77,7 +77,7 @@ function add_micro($type='vertical') {
             }
             else{
 //                micro_deploy_adjust_urls_static_serve($upload_directory, $micro_slug, $micro_tech, $micro_build);
-
+                micro_deploy_minify_horizontal_split($micro_slug, $upload_directory);
                 link_micro_shortcode($micro_slug, $upload_directory);
             }
 
@@ -286,10 +286,10 @@ function inject_micro_shortcode($micro_slug, $micro_path){
 
 
 
-    error_log('INJECTING MICRO ' . $index_path);
+//    error_log('INJECTING MICRO ' . $index_path);
 
     $contents = file_get_contents($index_path);
-    error_log('INJECTING MICRO ' . $contents);
+//    error_log('INJECTING MICRO ' . $contents);
 
     $target_pattern_start = '<!-- START MICRODEPLOY HORIZONTAL SPLIT -->';
     $target_pattern_end = '<!-- END MICRODEPLOY HORIZONTAL SPLIT -->';
@@ -307,10 +307,10 @@ function inject_micro_shortcode($micro_slug, $micro_path){
 
     $plugin_name = 'microdeploy';
     $segments = explode($plugin_name, plugin_dir_url(__FILE__));
-    $local_segments = explode($micro_slug, $css_path);
-    $local_segments_js = explode($micro_slug, $js_path);
-    $css_path_url = $segments[0] . $plugin_name . DIRECTORY_SEPARATOR . 'micros' . DIRECTORY_SEPARATOR . $micro_slug . $local_segments[1];
-    $js_path_url = $segments[0] . $plugin_name . DIRECTORY_SEPARATOR . 'micros' . DIRECTORY_SEPARATOR . $micro_slug . $local_segments_js[1];
+//    $local_segments = explode($micro_slug, $css_path);
+//    $local_segments_js = explode($micro_slug, $js_path);
+    $css_path_url = $segments[0] . $plugin_name . DIRECTORY_SEPARATOR . 'micros' . DIRECTORY_SEPARATOR . $micro_slug . DIRECTORY_SEPARATOR . 'prod.min.css';
+    $js_path_url = $segments[0] . $plugin_name . DIRECTORY_SEPARATOR . 'micros' . DIRECTORY_SEPARATOR . $micro_slug . DIRECTORY_SEPARATOR . 'prod.min.js';
 //    Add CSS and JS files
 //    error_log('CSS PATH ' . $p);
 //    error_log('CSS PATH ' . $css_path);

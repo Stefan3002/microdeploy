@@ -11,6 +11,8 @@ require_once(plugin_dir_path(__FILE__) . 'scripts/state-manager.php');
 require_once(plugin_dir_path(__FILE__) . 'scripts/page-generators.php');
 require_once(plugin_dir_path(__FILE__) . 'scripts/performance.php');
 require_once(plugin_dir_path(__FILE__) . 'scripts/utils_security.php');
+require_once plugin_dir_path(__FILE__) . 'assets/libraries/matthiasmullie-minifier/autoload.php';
+
 
 // Hook to add a menu option in the WordPress admin
 add_action('admin_menu', function () {
