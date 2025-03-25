@@ -199,7 +199,7 @@ function micro_deploy_adjust_urls_static_serve($micro_upload_directory, $micro_s
                 $contents = file_get_contents($file);
                 $updated_contents = preg_replace_callback($pattern, function($matches) use ($extra_slug, $micro_slug) {
                     error_log('FILE ' . $matches[0]);
-                    // Return the same link if it has already been parsed an modified accordingly.
+                    // Return the same link if it has already been parsed and modified accordingly.
 //                    matches[1] is a capturing group that contains the first part of the URL (between the first two slashes /)
                     if($matches[1] === $micro_slug)
                         return $matches[0];
@@ -207,7 +207,16 @@ function micro_deploy_adjust_urls_static_serve($micro_upload_directory, $micro_s
                     $match = trim($matches[1] . '/' . $matches[2], "./");
                     $match = '/' . $match;
                     $new_url = micro_deploy_get_slug_url($match, $micro_slug . $extra_slug);
-//                    error_log('ALOHAA HTML 0 ' . $matches[1]);
+                    error_log('ooooooooooooooooooooooooo' . print_r($match, true) . $matches[2]);
+//                    matches[2] contains the name of the media file from the src tag
+//                    Search for it in the WordPress native media folder
+                    $wp_media_path = micro_deploy_search_media_in_wp($matches[2]);
+                    if($wp_media_path !== null) {
+                        $wp_media_url = micro_deploy_local_path_to_url($wp_media_path);
+//                        TODO: remove the file from the micro-folder
+//                        TODO extend for all types of files, not just html and src
+                        return 'src=\'' . $wp_media_url . '\'';
+                    }
                     return 'src=\'' . $new_url . '\'';
 
                 }, $contents);
@@ -223,8 +232,9 @@ function micro_deploy_adjust_urls_static_serve($micro_upload_directory, $micro_s
 
                     $match = trim('/' . $matches[1] . '/' . $matches[2], "./");
                     $match = '/' . $match;
+
                     $new_url = micro_deploy_get_slug_url($match, $micro_slug . $extra_slug);
-                    error_log('ALOHAA HTML ' . $matches[1]);
+//                    error_log('ALOHAA HTML ' . $matches[1]);
                     return 'href=\'' . $new_url . '\'';
 
                 }, $contents);
@@ -234,7 +244,6 @@ function micro_deploy_adjust_urls_static_serve($micro_upload_directory, $micro_s
             }
             elseif($extension === 'js'){
                 $contents = file_get_contents($file);
-//                TODO: Add it as a setting
                 ini_set('pcre.backtrack_limit', $GLOBALS['micro_deploy_max_backtrack']);
                 $pattern = '/[\'"](?:[.]{0,2}\/?)([^\/\'"\s]+)\/?([^\'"\s]*\.(svg|png|jpg|jpeg|webp))[\'"]\s*/';
                 $updated_contents = preg_replace_callback($pattern, function($matches) use ($micro_tech, $micro_build, $extra_slug, $micro_slug) {

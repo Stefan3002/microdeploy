@@ -13,24 +13,28 @@ function micro_deploy_origin_check(){
 }
 
 function micro_deploy_generate_new_nonce(){
-//    TODO: check if insert succeded!
+//    Check if insert succeded!
     global $wpdb;
-    $nonce = wp_create_nonce('micro_deploy_nonce' . time());
-    $table_name = $wpdb->prefix . 'microdeploy_nonces';
-    $data = [
-        'value_name' => 'nonce',
-        'new_record_value' => [
-            'nonce' => $nonce
-        ],
+    try {
+        $nonce = wp_create_nonce('micro_deploy_nonce' . time());
+        $table_name = $wpdb->prefix . 'microdeploy_nonces';
+        $data = [
+            'value_name' => 'nonce',
+            'new_record_value' => [
+                'nonce' => $nonce
+            ],
 //        'value' => [
 //            'type' => "static_serve",
 //            'path' => $static_file_path_copy
 //        ]
-    ];
-    insert_db($table_name, $data, false);
-
-
-    return $nonce;
+        ];
+        insert_db($table_name, $data, false);
+        return $nonce;
+    }catch (Exception $e){
+        status_header(500);
+        dispatch_error('Could not generate nonce!');
+        exit('Could not generate nonce!');
+    }
 }
 
 function micro_deploy_check_nonce($data){

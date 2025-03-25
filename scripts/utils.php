@@ -170,40 +170,45 @@ function insert_db_wrapper($table_name, $data_value, $size, $global_name, $form_
 }
 function insert_db($table_name, $data, $with_update = true) {
     global $wpdb;
-    if($with_update) {
-        $data_name = $data['name'];
-        $data_value = $data['data_value'];
-        $value_name = $data['value_name'];
-        $already_results = $wpdb->get_results("SELECT * FROM $table_name WHERE $data_name = '$data_value'");
+    try {
+
+        if ($with_update) {
+            $data_name = $data['name'];
+            $data_value = $data['data_value'];
+            $value_name = $data['value_name'];
+            $already_results = $wpdb->get_results("SELECT * FROM $table_name WHERE $data_name = '$data_value'");
 //    error_log(print_r($already_results, true));
-        if (count($already_results) > 0)
-            return $wpdb->update($table_name, array(
-                $value_name => $data['value_change']
-            ), array(
-                'id' => $already_results[0]->id
-            ));
-        else {
+            if (count($already_results) > 0)
+                return $wpdb->update($table_name, array(
+                    $value_name => $data['value_change']
+                ), array(
+                    'id' => $already_results[0]->id
+                ));
+            else
+                return $wpdb->insert($table_name, $data['new_record_value']);
+        } else
             return $wpdb->insert($table_name, $data['new_record_value']);
-        }
-    }
-    else {
-        return $wpdb->insert($table_name, $data['new_record_value']);
+
+    } catch (Exception $e) {
+        error_log($e);
+        dispatch_error("Could not insert in the DB.");
+        return false;
     }
 }
 
-function micro_deploy_search_index_html($folder_path){
+function micro_deploy_search_index_html($folder_path, $target_name = 'index.html'){
 //    error_log("Searching for index.html in " . $folder_path);
     $files = glob($folder_path . DIRECTORY_SEPARATOR . "*");
 
     foreach($files as $file){
         error_log("Checking " . basename($file));
         if(is_dir($file)) {
-            $checked_file = micro_deploy_search_index_html($file);
-            if(basename($checked_file) === 'index.html')
+            $checked_file = micro_deploy_search_index_html($file, $target_name);
+            if(basename($checked_file) === $target_name)
                 return $checked_file;
         }
         else
-            if(basename($file) === 'index.html') {
+            if(basename($file) === $target_name) {
                 error_log("Found index.html in " . $file);
                 return $file;
             }
@@ -318,4 +323,20 @@ function micro_deploy_remove_full_folder($dir){
         error_log($e);
         dispatch_error("Could not remove the full micro folder.");
     }
+}
+
+function micro_deploy_search_media_in_wp($target){
+    $search_path = ABSPATH . 'wp-content' . DIRECTORY_SEPARATOR . 'uploads';
+    error_log("Searching for media in WP" . $search_path);
+    $found_file = micro_deploy_search_index_html($search_path, $target);
+    if(micro_deploy_search_index_html($search_path, $target))
+        return $found_file;
+    else
+        return false;
+}
+
+function micro_deploy_local_path_to_url($local_path, $marker='wp-content') {
+    $segments = explode($marker, $local_path);
+    $url = get_site_url() . DIRECTORY_SEPARATOR . $marker . $segments[1];
+    return $url;
 }
