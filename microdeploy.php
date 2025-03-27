@@ -5,6 +5,7 @@ Description: Deploys micro frontends to Wordpress
 Version: 1.0
 Author: Ștefan Secrieru
 */
+//TODO: Static assets misses can be reported back to enhance dev experience
 require_once(plugin_dir_path(__FILE__) . 'scripts/admin-dashboard.php');
 require_once(plugin_dir_path(__FILE__) . 'scripts/micro.php');
 require_once(plugin_dir_path(__FILE__) . 'scripts/state-manager.php');

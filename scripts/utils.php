@@ -340,3 +340,56 @@ function micro_deploy_local_path_to_url($local_path, $marker='wp-content') {
     $url = get_site_url() . DIRECTORY_SEPARATOR . $marker . $segments[1];
     return $url;
 }
+
+function micro_deploy_move_file_local($micro_media_file_path, $uploads_path) {
+    $segments = explode(DIRECTORY_SEPARATOR, $micro_media_file_path);
+    $file_name = $segments[count($segments) - 1];
+    $destination_path = $uploads_path . DIRECTORY_SEPARATOR . $file_name;
+    if(rename($micro_media_file_path, $destination_path))
+        return $destination_path;
+    else
+        return false;
+}
+
+function micro_deploy_add_media_to_db($final_path, $media_name, $media_extension) {
+    global $wpdb;
+    $table_name = $wpdb->prefix . 'posts';
+    try {
+        $wpdb->query('START TRANSACTION');
+        $result = $wpdb->insert($table_name, array(
+            'post_author' => 1,
+            'post_date' => date('Y-m-d H:i:s'),
+            'post_date_gmt' => date('Y-m-d H:i:s'),
+            'post_title' => $media_name,
+            'post_status' => 'inherit',
+            'post_name' => $media_name,
+            'post_modified' => date('Y-m-d H:i:s'),
+            'post_modified_gmt' => date('Y-m-d H:i:s'),
+            'post_type' => 'attachment',
+            'post_mime_type' => 'image/' . $media_extension,
+            'guid' => $final_path,
+        ));
+
+        if(!$result)
+            throw new Exception("Could not add media to the DB.");
+
+        $table_name2 = $wpdb->prefix . 'postmeta';
+        $segments = explode('uploads' . DIRECTORY_SEPARATOR, $final_path);
+
+        $result = $wpdb->insert($table_name2, array(
+            'post_id' => $wpdb->insert_id,
+            'meta_key' => '_wp_attached_file',
+            'meta_value' => $segments[1],
+        ));
+
+        if(!$result)
+            throw new Exception("Could not add media to the DB.");
+
+        $wpdb->query('COMMIT');
+    }catch (Exception $e){
+        $wpdb->query('ROLLBACK');
+        error_log($e);
+        dispatch_error("Could not add media to the DB.");
+    }
+
+}

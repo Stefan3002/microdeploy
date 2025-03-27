@@ -1,6 +1,5 @@
 <?php
 require_once plugin_dir_path(__FILE__) . 'utils.php';
-
 function add_micro($type='vertical') {
 
     $micro_name = $_POST['micro-deploy-add-new-micro-name'];
@@ -197,7 +196,7 @@ function micro_deploy_adjust_urls_static_serve($micro_upload_directory, $micro_s
                     file_put_contents($file, $updated_contents);
                 }
                 $contents = file_get_contents($file);
-                $updated_contents = preg_replace_callback($pattern, function($matches) use ($extra_slug, $micro_slug) {
+                $updated_contents = preg_replace_callback($pattern, function($matches) use ($micro_upload_directory, $extra_slug, $micro_slug) {
                     error_log('FILE ' . $matches[0]);
                     // Return the same link if it has already been parsed and modified accordingly.
 //                    matches[1] is a capturing group that contains the first part of the URL (between the first two slashes /)
@@ -208,14 +207,41 @@ function micro_deploy_adjust_urls_static_serve($micro_upload_directory, $micro_s
                     $match = '/' . $match;
                     $new_url = micro_deploy_get_slug_url($match, $micro_slug . $extra_slug);
                     error_log('ooooooooooooooooooooooooo' . print_r($match, true) . $matches[2]);
+
+//                    Only if media files like images!
+                    $name_segments = explode('.', $matches[2]);
+                    $media_extension = $name_segments[1];
+                    $supported_media_types_optimization = ['svg', 'png', 'jpg', 'jpeg', 'webp'];
+
+                    if(in_array($media_extension, $supported_media_types_optimization)) {
 //                    matches[2] contains the name of the media file from the src tag
 //                    Search for it in the WordPress native media folder
-                    $wp_media_path = micro_deploy_search_media_in_wp($matches[2]);
-                    if($wp_media_path !== null) {
-                        $wp_media_url = micro_deploy_local_path_to_url($wp_media_path);
+                        $wp_media_path = micro_deploy_search_media_in_wp($matches[2]);
+                        $micro_media_file_path = $micro_upload_directory . DIRECTORY_SEPARATOR . $match;
+
+                        error_log('MEDIA PATH ' . $wp_media_path);
+                        if ($wp_media_path) {
+                            $wp_media_url = micro_deploy_local_path_to_url($wp_media_path);
+//                        Remove the file that was already found
+                            if (file_exists($micro_media_file_path))
+                                unlink($micro_media_file_path);
 //                        TODO: remove the file from the micro-folder
 //                        TODO extend for all types of files, not just html and src
-                        return 'src=\'' . $wp_media_url . '\'';
+                            return 'src=\'' . $wp_media_url . '\'';
+                        } else {
+//                        Image was not found already, let's move it from here to there!
+//                            First verify that the file actually exists!
+                            error_log('aaaa' . $micro_media_file_path);
+                            if (file_exists($micro_media_file_path)) {
+                                $uploads_path = ABSPATH . 'wp-content' . DIRECTORY_SEPARATOR . 'uploads';
+                                $final_path = micro_deploy_move_file_local($micro_media_file_path, $uploads_path);
+//                                Also add to DB!
+                                $wp_media_url = micro_deploy_local_path_to_url($final_path);
+                                micro_deploy_add_media_to_db($wp_media_url, $matches[2], $media_extension);
+
+                                return 'src=\'' . $wp_media_url . '\'';
+                            }
+                        }
                     }
                     return 'src=\'' . $new_url . '\'';
 
