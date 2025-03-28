@@ -261,7 +261,7 @@ function micro_deploy_check_db_table($table_name){
 
 function check_horizontal_files($folder_path) {
     error_log(count(scandir($folder_path)));
-    if(count(scandir($folder_path)) !== 5) {
+    if(count(scandir($folder_path)) < 5) {
         dispatch_error("The micro folder does not contain the required number of files.");
         return false;
     }

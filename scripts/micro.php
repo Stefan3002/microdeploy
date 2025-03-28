@@ -30,6 +30,15 @@ function add_micro($type='vertical') {
             error_log("Existing page or post with the same name!");
             return;
         }
+//    Also check own database to see if there are other micro-frontends with the same slug already uploaded
+    global $wpdb;
+    $table_name = $wpdb->prefix . 'microdeploy_micros';
+    $results = $wpdb->get_results("SELECT * FROM $table_name WHERE slug = '$micro_slug'");
+    if(count($results) > 0){
+        dispatch_error("Micro with the same slug already exists!");
+        error_log("Micro with the same slug already exists!");
+        return;
+    }
 // =========================
     if(!array_key_exists('micro-deploy-add-new-micro-file', $_FILES)){
         dispatch_error('No files uploaded');
@@ -206,7 +215,6 @@ function micro_deploy_adjust_urls_static_serve($micro_upload_directory, $micro_s
                     $match = trim($matches[1] . '/' . $matches[2], "./");
                     $match = '/' . $match;
                     $new_url = micro_deploy_get_slug_url($match, $micro_slug . $extra_slug);
-                    error_log('ooooooooooooooooooooooooo' . print_r($match, true) . $matches[2]);
 
 //                    Only if media files like images!
                     $name_segments = explode('.', $matches[2]);
@@ -319,7 +327,10 @@ function inject_micro_shortcode($micro_slug, $micro_path){
     $css_path = micro_deploy_search_by_extension($micro_path, 'css');
     $js_path = micro_deploy_search_by_extension($micro_path, 'js');
 
-
+    if (!$css_path || !$js_path || !$index_path) {
+        dispatch_error("The micro does not contain the necessary files!");
+        return;
+    }
 
 //    error_log('INJECTING MICRO ' . $index_path);
 

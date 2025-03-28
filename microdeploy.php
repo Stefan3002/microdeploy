@@ -6,6 +6,8 @@ Version: 1.0
 Author: Ștefan Secrieru
 */
 //TODO: Static assets misses can be reported back to enhance dev experience
+//TODO: Minify the performance added code after adding it!
+//TODO: implement key signing or remove it from the paper!
 require_once(plugin_dir_path(__FILE__) . 'scripts/admin-dashboard.php');
 require_once(plugin_dir_path(__FILE__) . 'scripts/micro.php');
 require_once(plugin_dir_path(__FILE__) . 'scripts/state-manager.php');

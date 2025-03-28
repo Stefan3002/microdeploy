@@ -173,17 +173,17 @@ function micro_deploy_generate_admin_page() {
         </div>
     </div>
     <?php
-    $wpdb->query('START TRANSACTION');
     try {
-//        TODO: fix deletion!
         if (isset($_POST['delete-micro'])) {
-            error_log(intval($_POST['delete-micro']));
+            $micro_table_name = $wpdb->prefix . 'microdeploy_micros';
+            $wpdb->query('START TRANSACTION');
+
             $result = $wpdb->delete($micro_table_name,
                 array(
-                    'id' => intval($_POST['delete-micro'])
+                    'id' => $_POST['delete-micro']
                 )
             );
-            error_log($wpdb->last_error);
+
             if (!$result) {
                 error_log('Could not delete micro.');
                 dispatch_error('Could not delete micro.');
@@ -203,8 +203,9 @@ function micro_deploy_generate_admin_page() {
                 }
                     dispatch_success($result . ' Micros have been deleted.');
             }
+            $wpdb->query('COMMIT');
         }
-        $wpdb->query('COMMIT');
+
     } catch (Exception $e) {
         $wpdb->query('ROLLBACK');
     }

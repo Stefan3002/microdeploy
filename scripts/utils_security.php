@@ -8,8 +8,9 @@ function micro_deploy_origin_check(){
     ];
     if(empty($_SERVER['HTTP_ORIGIN']) || !in_array($_SERVER['HTTP_ORIGIN'], $allowed_origin)){
         header('HTTP/1.0 403 Forbidden');
-        exit('Not the same origin!');
+        return false;
     }
+    return true;
 }
 
 function micro_deploy_generate_new_nonce(){
@@ -43,13 +44,13 @@ function micro_deploy_check_nonce($data){
 
     if(!key_exists('nonce', $data)) {
         status_header(401);
-        exit('No nonce provided!');
+        return false;
     }
     $nonce = $data['nonce'];
     $results = $wpdb->get_results("SELECT * FROM $table_name WHERE nonce = '$nonce'");
     if(count($results) === 0) {
         status_header(401);
-        exit('Invalid nonce!');
+        return false;
     }
 
     return true;
@@ -65,17 +66,20 @@ function get_nonce_rest(){
 function micro_deploy_consume_nonce($nonce){
     global $wpdb;
     $table_name = $wpdb->prefix . 'microdeploy_nonces';
-    $wpdb->delete($table_name, ['nonce' => $nonce]);
+    if(!$wpdb->delete($table_name, ['nonce' => $nonce]))
+        return false;
+    return true;
 }
 
 function micro_deploy_check_hash($received_hash, $data){
     unset($data['hash']);
     $computed_hash = micro_deploy_compute_hash($data);
-    error_log('COMPUTED HASH: ' . $computed_hash);
+//    error_log('COMPUTED HASH: ' . $computed_hash);
     if($received_hash !== $computed_hash){
         status_header(401);
-        exit('Invalid hash!');
+        return false;
     }
+    return true;
 }
 
 function micro_deploy_compute_hash($data){

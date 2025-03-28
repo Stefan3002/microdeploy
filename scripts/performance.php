@@ -150,42 +150,49 @@ function add_performance_client_data_to_micros(){
 
 function set_data_rest($request)
 {
-//TODO check if insert succeded
-    micro_deploy_origin_check();
-
     global $wpdb;
-    $table_name = $wpdb->prefix . 'microdeploy_performance';
-    $data = $request->get_json_params();
+    try {
+        $wpdb->query("START TRANSACTION");
 
-    micro_deploy_check_nonce($data);
+        if(!micro_deploy_origin_check())
+            throw new Exception("Not the same origin!");
 
-    if(!micro_deploy_validate_input($data, [
-        "slug" => true,
-        "dcl" => true,
-        "fcp" => true,
-        "lcp" => true
-    ], [
-        "slug" => "string",
-        "dcl" => "integer",
-        "fcp" => "integer",
-        "lcp" => "integer"
-    ]))
-        return;
 
-    micro_deploy_check_hash($data['hash'], $data);
+        $table_name = $wpdb->prefix . 'microdeploy_performance';
+        $data = $request->get_json_params();
 
-    error_log(print_r($data, true));
-    $db_data = [
-        'slug' => $data['slug'],
-        'dcl' => $data['dcl'],
-        'fcp' => $data['fcp'],
-        'lcp' => $data['lcp']
-    ];
-    $slug = $data['slug'];
-    $performance_limit = $GLOBALS['micro_deploy_performance_limit'];
+        if(!micro_deploy_check_nonce($data))
+            throw new Exception("Invalid nonce!");
+
+        if (!micro_deploy_validate_input($data, [
+            "slug" => true,
+            "dcl" => true,
+            "fcp" => true,
+            "lcp" => true
+        ], [
+            "slug" => "string",
+            "dcl" => "integer",
+            "fcp" => "integer",
+            "lcp" => "integer"
+        ]))
+            throw new Exception("Invalid data!");
+
+        if(!micro_deploy_check_hash($data['hash'], $data))
+            throw new Exception("Invalid hash!");
+
+        $db_data = [
+            'slug' => $data['slug'],
+            'dcl' => $data['dcl'],
+            'fcp' => $data['fcp'],
+            'lcp' => $data['lcp']
+        ];
+        $slug = $data['slug'];
+        $performance_limit = $GLOBALS['micro_deploy_performance_limit'];
 //    Only keep the latest values!
-    $wpdb->insert($table_name, $db_data);
-    $wpdb->query("
+        if(!$wpdb->insert($table_name, $db_data))
+            throw new Exception("Could not save performance data.");
+
+        $deletion_result = $wpdb->query("
     DELETE FROM $table_name 
     WHERE id NOT IN (
         SELECT id FROM (
@@ -193,8 +200,17 @@ function set_data_rest($request)
         ) AS t
     ) AND slug='$slug'
 ");
+        if($deletion_result === false)
+            throw new Exception("Could not save performance data.");
 
-    micro_deploy_consume_nonce($data['nonce']);
+        if(!micro_deploy_consume_nonce($data['nonce']))
+            throw new Exception("Could not save performance data.");
 
-    return new WP_REST_Response('ok', 200);
+        $wpdb->query("COMMIT");
+        return new WP_REST_Response('ok', 200);
+
+    }catch (Exception $e){
+        $wpdb->query("ROLLBACK");
+        dispatch_error("Could not save performance data.");
+    }
 }
