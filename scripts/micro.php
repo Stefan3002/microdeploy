@@ -34,11 +34,13 @@ function add_micro($type='vertical') {
     global $wpdb;
     $table_name = $wpdb->prefix . 'microdeploy_micros';
     $results = $wpdb->get_results("SELECT * FROM $table_name WHERE slug = '$micro_slug'");
-    if(count($results) > 0){
-        dispatch_error("Micro with the same slug already exists!");
-        error_log("Micro with the same slug already exists!");
-        return;
+    $existing_path = null;
+    if(count($results) > 0) {
+//        Allow for update in this case!
+        $existing_path = $results[0]->path;
+        micro_deploy_remove_full_folder($existing_path);
     }
+
 // =========================
     if(!array_key_exists('micro-deploy-add-new-micro-file', $_FILES)){
         dispatch_error('No files uploaded');
@@ -75,7 +77,7 @@ function add_micro($type='vertical') {
                     return;
                 }
 //            Add the rewrite rules and DB entries
-                link_micro($upload_directory, $micro_slug, $micro_name, $micro_tech, $micro_build, $type);
+            link_micro($upload_directory, $micro_slug, $micro_name, $micro_tech, $micro_build, $type, $existing_path);
             if($type === 'vertical') {
 //            Change the URLS for static serving!
                 micro_deploy_adjust_urls_static_serve($upload_directory, $micro_slug, $micro_tech, $micro_build);
@@ -103,7 +105,7 @@ function add_micro($type='vertical') {
     }
 }
 
-function link_micro($upload_directory_file, $micro_slug, $micro_name, $micro_tech, $micro_build, $type='vertical') {
+function link_micro($upload_directory_file, $micro_slug, $micro_name, $micro_tech, $micro_build, $type='vertical', $existing_path = null) {
     global $wpdb;
 
     $micro_table_name = $wpdb->prefix . 'microdeploy_micros';
@@ -116,12 +118,18 @@ function link_micro($upload_directory_file, $micro_slug, $micro_name, $micro_tec
         'path' => sanitize_text_field($upload_directory_file),
         'type' => sanitize_text_field($type)
     );
-
-    if(!$wpdb->insert($micro_table_name, $data)){
-        error_log("COULD NOT INSERT DATA INTO MICRIOS TABLE");
-        dispatch_error('Could not insert data into the table');
-        return;
-    }
+    $db_data = [
+        'name' => 'slug',
+        'data_value' => $micro_slug,
+        'new_record_value' => $data,
+        'value_name' => $data
+    ];
+    insert_db($micro_table_name, $db_data, true);
+//    if(!$wpdb->insert($micro_table_name, $data)){
+//        error_log("COULD NOT INSERT DATA INTO MICRIOS TABLE");
+//        dispatch_error('Could not insert data into the table');
+//        return;
+//    }
     if($type === 'horizontal')
         return;
 //    TODO: Does this make sense anymore?
@@ -217,8 +225,12 @@ function micro_deploy_adjust_urls_static_serve($micro_upload_directory, $micro_s
                     $new_url = micro_deploy_get_slug_url($match, $micro_slug . $extra_slug);
 
 //                    Only if media files like images!
+
                     $name_segments = explode('.', $matches[2]);
-                    $media_extension = $name_segments[1];
+                    $media_extension = null;
+                    error_log('MEDIA FILE ' . print_r($name_segments, true));
+                    if(count($name_segments) > 1)
+                        $media_extension = $name_segments[1];
                     $supported_media_types_optimization = ['svg', 'png', 'jpg', 'jpeg', 'webp'];
 
                     if(in_array($media_extension, $supported_media_types_optimization)) {

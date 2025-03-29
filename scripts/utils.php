@@ -178,12 +178,24 @@ function insert_db($table_name, $data, $with_update = true) {
             $value_name = $data['value_name'];
             $already_results = $wpdb->get_results("SELECT * FROM $table_name WHERE $data_name = '$data_value'");
 //    error_log(print_r($already_results, true));
-            if (count($already_results) > 0)
-                return $wpdb->update($table_name, array(
-                    $value_name => $data['value_change']
-                ), array(
-                    'id' => $already_results[0]->id
-                ));
+            if (count($already_results) > 0) {
+                if(is_array($value_name)) {
+//                    TODO: check if it fails for each update itself
+                    foreach ($value_name as $key => $value)
+                        $wpdb->update($table_name, array(
+                            $key => $value
+                        ), array(
+                            'id' => $already_results[0]->id
+                        ));
+                    return true;
+                }
+                else
+                    return $wpdb->update($table_name, array(
+                        $value_name => $data['value_change']
+                    ), array(
+                        'id' => $already_results[0]->id
+                    ));
+            }
             else
                 return $wpdb->insert($table_name, $data['new_record_value']);
         } else
