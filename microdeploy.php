@@ -5,8 +5,6 @@ Description: Deploys micro frontends to Wordpress
 Version: 1.0
 Author: Ștefan Secrieru
 */
-//TODO: Static assets misses can be reported back to enhance dev experience
-//TODO: Minify the performance added code after adding it!
 //TODO: implement key signing or remove it from the paper!
 require_once(plugin_dir_path(__FILE__) . 'scripts/admin-dashboard.php');
 require_once(plugin_dir_path(__FILE__) . 'scripts/micro.php');
@@ -118,14 +116,16 @@ add_action('template_redirect', function () {
 //        Never return anything that is not in the micro folder already
         $static_file_path = realpath($static_file_path);
 //        realpath returns false if the file does not exist!!!!
+        error_log('STATIC FILE PATH: ' . $static_file_path);
         if(!$static_file_path){
 //          Remember the error in the DB
+            error_log('STATIC FILE PATH: ' . $static_file_path . 'll');
             $data = [
                 'name' => 'path',
                 'data_value' => $static_file_path_copy,
                 'value_name' => 'path',
                 'value_change' => $static_file_path_copy,
-                'value' => [
+                'new_record_value' => [
                     'type' => "static_serve",
                     'path' => $static_file_path_copy
                     ]
@@ -317,6 +317,30 @@ function micro_deploy_initialize_db() {
             error_log('logs ' . print_r($logs, true));
         }
     }
+
+
+    //    Security table!
+    if($GLOBALS['micro_deploy_enabled_performance'] === true) {
+        $table_name = $wpdb->prefix . 'microdeploy_keys';
+//        $charset_collate = $wpdb->get_charset_collate();
+
+        if (!($wpdb->get_var("SHOW TABLES LIKE '$table_name'") === $table_name)) {
+            $query = "
+      CREATE TABLE " . $table_name . "(
+            id mediumint(9) NOT NULL AUTO_INCREMENT,
+          private_key_path varchar(255) NOT NULL,
+          public_key_path varchar(255) NOT NULL,
+          created_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          PRIMARY KEY  (id)
+      ); 
+    ";
+
+            require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
+
+            $logs = dbDelta($query);
+            error_log('logs ' . print_r($logs, true));
+        }
+    }
 }
 //micro_deploy_initialize_db();
 
@@ -337,7 +361,6 @@ add_action('init', function () {
     });
 });
 function micro_deploy_register_rest(){
-//    TODO: check to see if we need to register the rest routes for the state manager
     add_action('rest_api_init', function () {
         register_rest_route('micro-deploy/v1', "/set-data", array(
             'methods' => "POST",

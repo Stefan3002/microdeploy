@@ -233,13 +233,11 @@ function micro_deploy_adjust_urls_static_serve($micro_upload_directory, $micro_s
 //                        Remove the file that was already found
                             if (file_exists($micro_media_file_path))
                                 unlink($micro_media_file_path);
-//                        TODO: remove the file from the micro-folder
 //                        TODO extend for all types of files, not just html and src
                             return 'src=\'' . $wp_media_url . '\'';
                         } else {
 //                        Image was not found already, let's move it from here to there!
 //                            First verify that the file actually exists!
-                            error_log('aaaa' . $micro_media_file_path);
                             if (file_exists($micro_media_file_path)) {
                                 $uploads_path = ABSPATH . 'wp-content' . DIRECTORY_SEPARATOR . 'uploads';
                                 $final_path = micro_deploy_move_file_local($micro_media_file_path, $uploads_path);

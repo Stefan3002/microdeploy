@@ -4,7 +4,7 @@ function remove_dir($dir) {
         if(!is_dir($dir))
             throw new Exception("$dir is not a directory");
 
-        // Careful for directories that are not empty! It will crash for horizontal split if there are no 3 files required!
+        // Careful with directories that are not empty! It will crash for horizontal split if there are no 3 files required!
         if(count(scandir($dir)) === 2) {
             if (rmdir($dir)) {
 
@@ -308,7 +308,6 @@ function micro_deploy_minify_horizontal_split($micro_slug, $upload_directory) {
     }
 
 }
-
 function micro_deploy_remove_full_folder($dir){
     try {
         $files = glob($dir . DIRECTORY_SEPARATOR . "*");

@@ -56,6 +56,29 @@ function add_performance_client_data_to_micros(){
     })
     return aux
 }
+
+async function importPublicKey(pemKey) {
+    const binaryDer = Uint8Array.from(atob(pemKey), c => c.charCodeAt(0));
+
+    return await window.crypto.subtle.importKey(
+        "spki", // SubjectPublicKeyInfo format
+        binaryDer,
+        { name: "RSA-OAEP", hash: "SHA-256" },
+        true,  // Can be exported
+        ["encrypt"] // Only encryption allowed
+    );
+}
+
+async function encryptMessage(publicKey, message) {
+    const encodedMessage = new TextEncoder().encode(message);
+    const encrypted = await window.crypto.subtle.encrypt(
+        { name: "RSA-OAEP" },
+        publicKey,
+        encodedMessage
+    );
+
+    return btoa(String.fromCharCode(...new Uint8Array(encrypted)));
+}
                 
                 
 	const sendData = async () => {
@@ -69,8 +92,13 @@ function add_performance_client_data_to_micros(){
             const date = Date.now()
             const secret = nonce + date
             
+//            Encrypt the nonce!!!
+            const key = await(importPublicKey("MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAsBXAYZpm02DKBGabl+d8q1jPs9ZOAQsvikDNCtpXgAm4qEbuWjf+TJnzptuZfKpaN6+ObkNaNtgKsSEMtDOaI0lq+SK+GhvTVetiZwicA1TnKmn0kH+OP9YIwgKpWlQfBG+ieUh8q/UJnK+TK4UCWuh/oJznyN/k6SrVmjTNkSVaGvtBp3oIhvTrhiioLK2jJlZiN8FgggMi3X1AHOmVzT9/bX2SbOBJYZJlYhkTz9nJ7tm4g8GNAs4WFHy1y0jn9r0te7VqroWui1Ui4Zz3x9rxWeCX9iRa1Kp6cn5AoJoqfUCDrGFkEmd25EOabTRh9mlOJKnkk0PV0REAapUySQIDAQAB"))
+            const nonce_encrypted = await encryptMessage(key, nonce)
+            
+            
         	let data = {
-                nonce,
+                nonce_encrypted,
                 slug: "' . $micro_slug . '",
             	dcl,
             	fcp,
