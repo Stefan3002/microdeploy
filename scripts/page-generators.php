@@ -251,6 +251,128 @@ function micro_deploy_generate_errors_page() {
             }
 }
 
+function micro_deploy_generate_rollback_page() {
+    global $wpdb;
+
+    $micro_table_name = $wpdb->prefix . 'microdeploy_rollbacks';
+    $results = $wpdb->get_results("SELECT * FROM $micro_table_name");
+
+    $rollbacks = [];
+    foreach($results as $result){
+        if(!array_key_exists($result->slug, $rollbacks))
+            $rollbacks[$result->slug] = [];
+        array_push($rollbacks[$result->slug], $result);
+    }
+    error_log('ROLLBACKS: ' . print_r($rollbacks, true));
+
+    ?>
+    <div class='micro_deploy_admin-page-wrapper'>
+        <div class="micro_deploy_admin-page-header">
+            <h2 class="micro_deploy_title">Micro Deploy</h2>
+            <p>by Ștefan Secrieru</p>
+        </div>
+        <section class="micro-deploy-settings-page-content">
+<!--            <div class="micro-deploy-admin-page-new-micro micro-deploy-card">-->
+<!--                <h2>Static Serving Faults</h2>-->
+<!--                <p>───── ⋆⋅☆⋅⋆ ─────</p>-->
+<!--                <p>Number of static serving faults encountered:</p>-->
+<!--                <span class="micro-deploy-big-number">--><?php //_e(count($results)) ?><!--</span>-->
+<!--            </div>-->
+            <?php if(count($results) !== 0){ ?>
+            <div class="micro-deploy-admin-page-new-micro micro-deploy-card micro-deploy-max-height-card">
+                <h2>Static Serving Faults URLs</h2>
+                <p>───── ⋆⋅☆⋅⋆ ─────</p>
+                <form action="" method="POST">
+                    <input type="text" hidden name="micro_deploy_delete_all_rollbacks">
+                    <button class="micro-deploy-delete-button" type="submit">Delete all rollbacks</button>
+                </form>
+                <p>The following static assets requests encountered an error:</p>
+                <ul>
+                    <?php
+                    foreach($rollbacks as $resultk => $result){
+                        ?> <p><?php _e($resultk); ?></p>
+                        <?php
+                        foreach ($result as $res){ ?>
+                        <li>
+                                <p><?php _e($res->name) ?></p>
+                                <p><?php _e($res->created_at) ?></p>
+
+                            <form action="" method="POST">
+                                <input type="text" hidden name="micro_deploy_delete_rollback" value="<?php _e($res->id) ?>">
+                                <input type="text" hidden name="micro_deploy_delete_rollback_path" value="<?php _e($res->path) ?>">
+                                <button type="submit">Delete</button>
+                            </form>
+                            <form action="" method="POST">
+                                <input type="text" hidden name="micro_deploy_roll_rollback" value="<?php _e($res->id) ?>">
+                                <input type="text" hidden name="micro_deploy_roll_rollback_path" value="<?php _e($res->path) ?>">
+                                <input type="text" hidden name="micro_deploy_roll_rollback_slug" value="<?php _e($res->slug) ?>">
+                                <button type="submit">Rollback</button>
+                            </form>
+                            <?php } ?>
+                        </li>
+                        <?php
+                    }
+                    }
+                    ?>
+                </ul>
+            </div>
+        </section>
+    </div>
+    <?php
+//TODO Make them atomic DB operations!
+    if(isset($_POST['micro_deploy_delete_rollback'])) {
+        micro_deploy_remove_full_folder($_POST['micro_deploy_delete_rollback_path']);
+        if ($wpdb->delete($micro_table_name, array(
+            'id' => $_POST['micro_deploy_delete_rollback']
+        ))) {
+            dispatch_success("Rollback deleted.");
+        } else {
+            dispatch_error("Could not delete rollback.");
+        }
+    }
+
+    if(isset($_POST['micro_deploy_roll_rollback'])) {
+        $segments = explode('micros', $_POST['micro_deploy_roll_rollback_path']);
+        $new_path = $segments[0] . 'micros' . DIRECTORY_SEPARATOR . $_POST['micro_deploy_roll_rollback_slug'];
+
+//        Remove the current folder
+        micro_deploy_remove_full_folder($new_path);
+//        Recreate the folder
+        if(!is_dir($new_path))
+            mkdir($new_path, 0755, true);
+
+        if (micro_deploy_move_folder($_POST['micro_deploy_roll_rollback_path'], $new_path)) {
+            dispatch_success("Rolled back successfully.");
+        } else {
+            dispatch_error("Could not roll back.");
+        }
+//        Remove from db
+        if ($wpdb->delete($micro_table_name, array(
+            'id' => $_POST['micro_deploy_roll_rollback']
+        ))) {
+            dispatch_success("Rollback deleted.");
+        } else {
+            dispatch_error("Could not delete rollback.");
+        }
+//        TODO: Also change the whole db record with the previous slug, type, name etc. Now you are changing only the folder itself!
+    }
+    if(isset($_POST['micro_deploy_delete_all_rollbacks']))
+        foreach($rollbacks as $rollback => $result)
+            foreach ($result as $res){
+            micro_deploy_remove_full_folder($res->path);
+                if($wpdb->delete($micro_table_name, array(
+                    'id' => $res->id
+                ))) {
+                    dispatch_success("Error deleted.");
+                } else {
+                    dispatch_error("Could not delete error.");
+                }
+            }
+
+}
+
+
+
 function micro_deploy_generate_about_page() {
     ?>
     <div class='micro_deploy_admin-page-wrapper'>

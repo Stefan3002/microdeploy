@@ -29,6 +29,7 @@ add_action('admin_menu', function () {
     add_submenu_page('micro-deploy', 'Deployment Settings', 'Settings', 'manage_options', 'settings', 'micro_deploy_generate_settings_page');
     add_submenu_page('micro-deploy', 'Deployment Performance', 'Performance', 'manage_options', 'performance', 'micro_deploy_generate_performance_page');
     add_submenu_page('micro-deploy', 'Deployment Errors', 'Errors', 'manage_options', 'errors', 'micro_deploy_generate_errors_page');
+    add_submenu_page('micro-deploy', 'Rollback and Versioning', 'Rollback', 'manage_options', 'rollback', 'micro_deploy_generate_rollback_page');
     add_submenu_page('micro-deploy', 'About Microdeploy', 'About', 'manage_options', 'about', 'micro_deploy_generate_about_page');
 });
 
@@ -341,6 +342,34 @@ function micro_deploy_initialize_db() {
             error_log('logs ' . print_r($logs, true));
         }
     }
+
+
+    //    Rollback table!
+
+        $table_name = $wpdb->prefix . 'microdeploy_rollbacks';
+//        $charset_collate = $wpdb->get_charset_collate();
+
+        if (!($wpdb->get_var("SHOW TABLES LIKE '$table_name'") === $table_name)) {
+            $query = "
+      CREATE TABLE " . $table_name . "(
+           id mediumint(9) NOT NULL AUTO_INCREMENT,
+          name varchar(255) NOT NULL,
+          slug varchar(255) NOT NULL,
+          tech varchar(255) NOT NULL,
+          build varchar(255) NOT NULL,
+          path varchar(255) NOT NULL,
+          type varchar(50) NOT NULL DEFAULT 'vertical',
+          created_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          PRIMARY KEY  (id)
+      ); 
+    ";
+
+            require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
+
+            $logs = dbDelta($query);
+            error_log('logs ' . print_r($logs, true));
+        }
+
 }
 //micro_deploy_initialize_db();
 

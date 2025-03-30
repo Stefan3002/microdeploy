@@ -329,7 +329,8 @@ function micro_deploy_remove_full_folder($dir){
                 micro_deploy_remove_full_folder($file);
             elseif (is_file($file))
                 unlink($file);
-        rmdir($dir);
+        if(is_dir($dir))
+            rmdir($dir);
     }catch (Exception $e){
         error_log($e);
         dispatch_error("Could not remove the full micro folder.");
@@ -403,4 +404,13 @@ function micro_deploy_add_media_to_db($final_path, $media_name, $media_extension
         dispatch_error("Could not add media to the DB.");
     }
 
+}
+
+function micro_deploy_move_folder($old_path, $new_path) {
+//    TODO: error handling
+    if(!is_dir($new_path))
+        mkdir($new_path, 0755, true);
+    rename($old_path, $new_path);
+
+    return true;
 }

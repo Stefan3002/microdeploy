@@ -38,6 +38,30 @@ function add_micro($type='vertical') {
     if(count($results) > 0) {
 //        Allow for update in this case!
         $existing_path = $results[0]->path;
+        $segments = explode($micro_slug, $existing_path);
+//        Move old folder to a repository-kind of-thing to enable a simple rollback
+        $new_folder = $segments[0] . 'old' . DIRECTORY_SEPARATOR . $micro_slug . DIRECTORY_SEPARATOR . time();
+        micro_deploy_move_folder($existing_path, $new_folder);
+//        TODO: Add record to DB to allow rollback
+        $table_name_rollback = $wpdb->prefix . 'microdeploy_rollbacks';
+        $data = [
+            'new_record_value' => [
+                'name' => sanitize_text_field($micro_name),
+                'slug' => sanitize_text_field($micro_slug),
+                'tech' => sanitize_text_field($micro_tech),
+                'build' => sanitize_text_field($micro_build),
+                'type' => sanitize_text_field($type),
+                'path' => $new_folder
+            ],
+        ];
+        if(!insert_db($table_name_rollback, $data, false)) {
+            dispatch_error('Could not insert data into the rollback table');
+            micro_deploy_remove_full_folder($new_folder);
+            return;
+        }
+        else
+            error_log("Inserted data into the rollback table");
+//        Remove old folder
         micro_deploy_remove_full_folder($existing_path);
     }
 
